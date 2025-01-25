@@ -48,8 +48,10 @@ const (
 	INST_R_R = iota
 	INST_R_V
 	INST_R_A
+	INST_R_L
 	INST_A_R
 	INST_A_V
+	INST_A_L
 	INST_A
 	INST_V
 	INST_R

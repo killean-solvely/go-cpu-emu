@@ -8,20 +8,22 @@ import (
 
 func main() {
 	program := []string{
-		"LOAD R0 0",
-		"LOAD R1 10",
+		"LOAD R0 250",
+		"LOAD R1 0",
+		"start:",
 		"CMP_REG_REG R0 R1",
-		"JE 72",
+		"JE end",
 		"PRINT_REG R0",
-		"INC R0",
-		"JMP 61",
+		"DEC R0",
+		"JMP start",
+		"end:",
 		"PRINT_REG R1",
 		"HLT",
 	}
 
 	bytecode, err := cpu.Assemble(program)
 	if err != nil {
-		fmt.Println("Assembly failed:", err)
+		fmt.Println(err.Error())
 		return
 	}
 
@@ -30,6 +32,4 @@ func main() {
 	memory.LoadCode(bytecode)
 
 	cpuInstance.Execute(memory)
-
-	fmt.Printf("Register 0 contains: %d\n", cpuInstance.Registers[0])
 }
