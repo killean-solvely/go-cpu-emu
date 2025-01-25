@@ -59,7 +59,14 @@ func (a *Assembler) firstPass() {
 	opcodeCount := 0
 	for _, line := range a.Program {
 		parts := strings.Fields(line)
+
+		// Skip empty lines
 		if len(parts) == 0 {
+			continue
+		}
+
+		// Skip comments (starts with #)
+		if parts[0][0] == '#' {
 			continue
 		}
 
@@ -89,7 +96,14 @@ func (a Assembler) secondPass() ([]uint8, error) {
 
 	for i, line := range a.Program {
 		parts := strings.Fields(line)
+
+		// Skip empty lines
 		if len(parts) == 0 {
+			continue
+		}
+
+		// Skip comments (starts with #)
+		if parts[0][0] == '#' {
 			continue
 		}
 
