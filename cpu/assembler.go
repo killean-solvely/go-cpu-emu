@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -258,14 +259,25 @@ func (a *Assembler) parseAV(
 			"Instruction must have 2 operands",
 		)
 	}
+
 	address, err := strconv.Atoi(parts[1])
 	if err != nil || !validAddress(address) {
 		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
 	}
+
 	value, err := strconv.Atoi(parts[2])
 	if err != nil || !validValue(value) {
-		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		if convErr, ok := err.(*strconv.NumError); ok {
+			if len(convErr.Num) == 1 && parts[1][0] >= 0 && parts[1][0] <= 255 {
+				value = int(parts[1][0])
+			} else {
+				return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+			}
+		} else {
+			return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		}
 	}
+
 	return []uint8{uint8(opcode), uint8(address), uint8(value)}, nil
 }
 
@@ -336,10 +348,20 @@ func (a *Assembler) parseV(
 			"Instruction must have 1 operand",
 		)
 	}
+
 	value, err := strconv.Atoi(parts[1])
 	if err != nil || !validValue(value) {
-		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		if convErr, ok := err.(*strconv.NumError); ok {
+			if len(convErr.Num) == 1 && parts[1][0] >= 0 && parts[1][0] <= 255 {
+				value = int(parts[1][0])
+			} else {
+				return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+			}
+		} else {
+			return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		}
 	}
+
 	return []uint8{uint8(opcode), uint8(value)}, nil
 }
 
