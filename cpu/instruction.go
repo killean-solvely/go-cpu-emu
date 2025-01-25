@@ -3,117 +3,149 @@ package cpu
 type Opcode uint8
 
 const (
-	OP_LOAD          Opcode = iota // Load a value into a register
-	OP_LOADM                       // Load a value from stored memory into a register
-	OP_STORE_VAL                   // Store a value in stored memory
-	OP_STORE_REG                   // Store a value from a register in stored memory
-	OP_STORE_REG_REG               // Store a value from a register in stored memory, using a register as the address
-	OP_ADD                         // Add values from two registers
-	OP_SUB                         // Subtract values from two registers
-	OP_MUL                         // Multiply values from two registers
-	OP_DIV                         // Divide values from two registers
-	OP_MOD                         // Modulo values from two registers
-	OP_AND                         // Bitwise AND values from two registers
-	OP_OR                          // Bitwise OR values from two registers
-	OP_XOR                         // Bitwise XOR values from two registers
-	OP_NOT                         // Bitwise NOT values from a register
-	OP_SHL                         // Bitwise shift left values from a register
-	OP_SHR                         // Bitwise shift right values from a register
-	OP_INC                         // Increment a register
-	OP_DEC                         // Decrement a register
-	OP_PUSH                        // Push a value onto the stack
-	OP_PUSH_REG                    // Push a value from a register onto the stack
-	OP_POP                         // Pop a value from the stack
-	OP_POP_REG                     // Pop a value from the stack into a register
-	OP_CMP_REG_VAL                 // Compare a register with a value
-	OP_CMP_REG_REG                 // Compare two registers
-	OP_JMP                         // Jump to an address
-	OP_JMP_REG                     // Jump to an address in a register
-	OP_JE                          // Jump if equal
-	OP_JNE                         // Jump if not equal
-	OP_JG                          // Jump if greater
-	OP_JGE                         // Jump if greater or equal
-	OP_JL                          // Jump if less
-	OP_JLE                         // Jump if less or equal
-	OP_CALL                        // Call a function. Pushes the next instruction address onto the stack
-	OP_RET                         // Return from a function. Uses the last value on the stack as the return address
-	OP_PRINT                       // Print a value
-	OP_PRINT_REG                   // Print a value from a register
-	OP_PRINT_MEM                   // Print a string from stored memory
-	OP_HLT                         // Halt execution
+	OP_LOAD_RV  Opcode = iota // Load a value into a register
+	OP_LOADM_RA               // Load a value from stored memory into a register
+	OP_STORE_RA               // Stores a register in stored memory
+	OP_STORE_AV               // Stores a value in stored memory
+	OP_STORE_RR               // Stores register2 in the address that register1 contains
+	OP_ADD_RR                 // Add the right register to the left register, storing the result in the left register
+	OP_ADD_RV                 // Add the register and value together, storing in the register
+	OP_SUB_RR                 // Subtract the right register from the left register, storing the result in the left register
+	OP_SUB_RV                 // Subtract the value from the register, storing in the register
+	OP_MUL_RR                 // Multiply the left register by the right register, storing the result in the left register
+	OP_MUL_RV                 // Multiply the register by the value, storing in the register
+	OP_DIV_RR                 // Divide the left register by the right register, storing the result in the left register
+	OP_DIV_RV                 // Divide the register by the value, storing in the register
+	OP_MOD_RR                 // Modulo the left register by the right register, storing the result in the left register
+	OP_MOD_RV                 // Modulo the register by the value, storing in the register
+	OP_AND_RR                 // Bitwise AND the left register with the right register, storing the result in the left register
+	OP_AND_RV                 // Bitwise AND the register with the value, storing in the register
+	OP_OR_RR                  // Bitwise OR the left register with the right register, storing the result in the left register
+	OP_OR_RV                  // Bitwise OR the register with the value, storing in the register
+	OP_XOR_RR                 // Bitwise XOR the left register with the right register, storing the result in the left register
+	OP_XOR_RV                 // Bitwise XOR the register with the value, storing in the register
+	OP_NOT_R                  // Bitwise NOT a register
+	OP_SHL_R                  // Bitwise shift left a register
+	OP_SHR_R                  // Bitwise shift right a register
+	OP_INC_R                  // Increment a register
+	OP_DEC_R                  // Decrement a register
+	OP_PUSH_R                 // Push a register onto the stack
+	OP_PUSH_V                 // Push a value onto the stack
+	OP_POP_NONE               // Pop a value off the stack
+	OP_POP_R                  // Pop a value off the stack into a register
+	OP_CMP_RR                 // Compare two registers, setting the flags
+	OP_CMP_RV                 // Compare a register to a value, setting the flags
+	OP_JMP_A                  // Jump to an address
+	OP_JMP_R                  // Jump to a register
+	OP_JE_A                   // Jump if equal to an address
+	OP_JE_R                   // Jump if equal to an register
+	OP_JNE_A                  // Jump if not equal to an address
+	OP_JNE_R                  // Jump if not equal to an register
+	OP_JG_A                   // Jump if greater than an address
+	OP_JG_R                   // Jump if greater than an register
+	OP_JGE_A                  // Jump if greater than or equal to an address
+	OP_JGE_R                  // Jump if greater than or equal to an register
+	OP_JL_A                   // Jump if less than an address
+	OP_JL_R                   // Jump if less than an register
+	OP_JLE_A                  // Jump if less than or equal to an address
+	OP_JLE_R                  // Jump if less than or equal to an register
+	OP_CALL_A                 // Call a function at an address
+	OP_CALL_R                 // Call a function at a register
+	OP_RET_NONE               // Return from a function
+	OP_PRINT_V                // Print a value
+	OP_PRINT_R                // Print a register
+	OP_PRINTS_A               // Print a string from stored memory
+	OP_HLT_NONE               // Halt execution
 )
 
 type InstructionType uint8
 
 // Instruction types
 const (
-	INST_R_R InstructionType = iota
-	INST_R_V
-	INST_R_A
-	INST_R_L
-	INST_A_V
-	INST_A_L
+	INST_R InstructionType = iota
+	INST_RR
+	INST_RA
+	INST_RV
 	INST_A
+	INST_AV
 	INST_V
-	INST_R
 	INST_NONE
+
+	INST_AL
+	INST_RL
 )
 
-type OpcodeDefinition struct {
-	Type   InstructionType
-	Opcode Opcode
+type OpcodeKey struct {
+	OpcodeName string
+	Type       InstructionType
 }
 
-var OpcodeMap = map[string]OpcodeDefinition{
-	"LOAD":          {Type: INST_R_V, Opcode: OP_LOAD},
-	"LOADM":         {Type: INST_R_A, Opcode: OP_LOADM},
-	"STORE_VAL":     {Type: INST_A_V, Opcode: OP_STORE_VAL},
-	"STORE_REG":     {Type: INST_R_A, Opcode: OP_STORE_REG},
-	"STORE_REG_REG": {Type: INST_R_R, Opcode: OP_STORE_REG_REG},
-	"ADD":           {Type: INST_R_R, Opcode: OP_ADD},
-	"SUB":           {Type: INST_R_R, Opcode: OP_SUB},
-	"MUL":           {Type: INST_R_R, Opcode: OP_MUL},
-	"DIV":           {Type: INST_R_R, Opcode: OP_DIV},
-	"MOD":           {Type: INST_R_R, Opcode: OP_MOD},
-	"AND":           {Type: INST_R_R, Opcode: OP_AND},
-	"OR":            {Type: INST_R_R, Opcode: OP_OR},
-	"XOR":           {Type: INST_R_R, Opcode: OP_XOR},
-	"NOT":           {Type: INST_R, Opcode: OP_NOT},
-	"SHL":           {Type: INST_R, Opcode: OP_SHL},
-	"SHR":           {Type: INST_R, Opcode: OP_SHR},
-	"INC":           {Type: INST_R, Opcode: OP_INC},
-	"DEC":           {Type: INST_R, Opcode: OP_DEC},
-	"PUSH":          {Type: INST_V, Opcode: OP_PUSH},
-	"PUSH_REG":      {Type: INST_R, Opcode: OP_PUSH_REG},
-	"POP":           {Type: INST_NONE, Opcode: OP_POP},
-	"POP_REG":       {Type: INST_R, Opcode: OP_POP_REG},
-	"CMP_REG_VAL":   {Type: INST_R_V, Opcode: OP_CMP_REG_VAL},
-	"CMP_REG_REG":   {Type: INST_R_R, Opcode: OP_CMP_REG_REG},
-	"JMP":           {Type: INST_A_L, Opcode: OP_JMP},
-	"JMP_REG":       {Type: INST_R_L, Opcode: OP_JMP_REG},
-	"JE":            {Type: INST_A_L, Opcode: OP_JE},
-	"JNE":           {Type: INST_A_L, Opcode: OP_JNE},
-	"JG":            {Type: INST_A_L, Opcode: OP_JG},
-	"JGE":           {Type: INST_A_L, Opcode: OP_JGE},
-	"JL":            {Type: INST_A_L, Opcode: OP_JL},
-	"JLE":           {Type: INST_A_L, Opcode: OP_JLE},
-	"CALL":          {Type: INST_A_L, Opcode: OP_CALL},
-	"RET":           {Type: INST_NONE, Opcode: OP_RET},
-	"PRINT":         {Type: INST_V, Opcode: OP_PRINT},
-	"PRINT_REG":     {Type: INST_R, Opcode: OP_PRINT_REG},
-	"PRINT_MEM":     {Type: INST_A, Opcode: OP_PRINT_MEM},
-	"HLT":           {Type: INST_NONE, Opcode: OP_HLT},
+var OpcodeMap = map[OpcodeKey]Opcode{
+	{"LOAD", INST_RV}:  OP_LOAD_RV,
+	{"LOADM", INST_RA}: OP_LOADM_RA,
+	{"STORE", INST_RA}: OP_STORE_RA,
+	{"STORE", INST_AV}: OP_STORE_AV,
+	{"STORE", INST_RR}: OP_STORE_RR,
+	{"ADD", INST_RR}:   OP_ADD_RR,
+	{"ADD", INST_RV}:   OP_ADD_RV,
+	{"SUB", INST_RR}:   OP_SUB_RR,
+	{"SUB", INST_RV}:   OP_SUB_RV,
+	{"MUL", INST_RR}:   OP_MUL_RR,
+	{"MUL", INST_RV}:   OP_MUL_RV,
+	{"DIV", INST_RR}:   OP_DIV_RR,
+	{"DIV", INST_RV}:   OP_DIV_RV,
+	{"MOD", INST_RR}:   OP_MOD_RR,
+	{"MOD", INST_RV}:   OP_MOD_RV,
+	{"AND", INST_RR}:   OP_AND_RR,
+	{"AND", INST_RV}:   OP_AND_RV,
+	{"OR", INST_RR}:    OP_OR_RR,
+	{"OR", INST_RV}:    OP_OR_RV,
+	{"XOR", INST_RR}:   OP_XOR_RR,
+	{"XOR", INST_RV}:   OP_XOR_RV,
+	{"NOT", INST_R}:    OP_NOT_R,
+	{"SHL", INST_R}:    OP_SHL_R,
+	{"SHR", INST_R}:    OP_SHR_R,
+	{"INC", INST_R}:    OP_INC_R,
+	{"DEC", INST_R}:    OP_DEC_R,
+	{"PUSH", INST_R}:   OP_PUSH_R,
+	{"PUSH", INST_V}:   OP_PUSH_V,
+	{"POP", INST_NONE}: OP_POP_NONE,
+	{"POP", INST_R}:    OP_POP_R,
+	{"CMP", INST_RR}:   OP_CMP_RR,
+	{"CMP", INST_RV}:   OP_CMP_RV,
+	{"JMP", INST_AL}:   OP_JMP_A,
+	{"JMP", INST_RL}:   OP_JMP_R,
+	{"JE", INST_AL}:    OP_JE_A,
+	{"JE", INST_RL}:    OP_JE_R,
+	{"JNE", INST_AL}:   OP_JNE_A,
+	{"JNE", INST_RL}:   OP_JNE_R,
+	{"JG", INST_AL}:    OP_JG_A,
+	{"JG", INST_RL}:    OP_JG_R,
+	{"JGE", INST_AL}:   OP_JGE_A,
+	{"JGE", INST_RL}:   OP_JGE_R,
+	{"JL", INST_AL}:    OP_JL_A,
+	{"JL", INST_RL}:    OP_JL_R,
+	{"JLE", INST_AL}:   OP_JLE_A,
+	{"JLE", INST_RL}:   OP_JLE_R,
+	{"CALL", INST_AL}:  OP_CALL_A,
+	{"CALL", INST_RL}:  OP_CALL_R,
+	{"RET", INST_NONE}: OP_RET_NONE,
+	{"PRINT", INST_V}:  OP_PRINT_V,
+	{"PRINT", INST_R}:  OP_PRINT_R,
+	{"PRINTS", INST_A}: OP_PRINTS_A,
+	{"HLT", INST_NONE}: OP_HLT_NONE,
 }
 
 var InstructionSizeMap = map[InstructionType]int{
-	INST_R_R:  3,
-	INST_R_V:  3,
-	INST_R_A:  3,
-	INST_R_L:  2,
-	INST_A_V:  3,
-	INST_A_L:  2,
+	INST_RR:   3,
+	INST_RV:   3,
+	INST_RA:   3,
+	INST_AV:   3,
 	INST_A:    2,
 	INST_V:    2,
 	INST_R:    2,
 	INST_NONE: 1,
+
+	INST_AL: 2,
+	INST_RL: 2,
 }

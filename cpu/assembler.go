@@ -11,7 +11,7 @@ type Assembler struct {
 	OpcodeCount    int
 	LabelAddresses map[string]int // label name to label address
 	JumpAddresses  map[int]string // jump location to label name
-	ParseMap       map[string]func(int, []string, string, Opcode) ([]uint8, error)
+	ParseMap       map[OpcodeKey]func(int, []string, string, Opcode) ([]uint8, error)
 }
 
 func NewAssembler(program []string) *Assembler {
@@ -22,24 +22,24 @@ func NewAssembler(program []string) *Assembler {
 		OpcodeCount:    0,
 		LabelAddresses: labelAddresses,
 		JumpAddresses:  jumpAddresses,
-		ParseMap:       make(map[string]func(int, []string, string, Opcode) ([]uint8, error)),
+		ParseMap:       make(map[OpcodeKey]func(int, []string, string, Opcode) ([]uint8, error)),
 	}
 
 	var instructionTypeToParseFunc = map[InstructionType]func(int, []string, string, Opcode) ([]uint8, error){
-		INST_R_R:  asm.parseRR,
-		INST_R_V:  asm.parseRV,
-		INST_R_A:  asm.parseRA,
-		INST_R_L:  asm.parseRL,
-		INST_A_V:  asm.parseAV,
-		INST_A_L:  asm.parseAL,
+		INST_RR:   asm.parseRR,
+		INST_RV:   asm.parseRV,
+		INST_RA:   asm.parseRA,
+		INST_RL:   asm.parseRL,
+		INST_AV:   asm.parseAV,
+		INST_AL:   asm.parseAL,
 		INST_A:    asm.parseA,
 		INST_V:    asm.parseV,
 		INST_R:    asm.parseR,
 		INST_NONE: asm.parseNone,
 	}
 
-	for opcodeString, instruction := range OpcodeMap {
-		asm.ParseMap[opcodeString] = instructionTypeToParseFunc[instruction.Type]
+	for opKey := range OpcodeMap {
+		asm.ParseMap[opKey] = instructionTypeToParseFunc[opKey.Type]
 	}
 
 	return asm
@@ -79,12 +79,13 @@ func (a *Assembler) firstPass() {
 
 		opcodeName := parts[0]
 
-		jmpRegisters := []string{"JMP_REG", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL"}
+		jmpRegisters := []string{"JMP", "JE", "JNE", "JG", "JL", "JGE", "JLE", "CALL"}
 		if slices.Contains(jmpRegisters, opcodeName) {
 			a.JumpAddresses[opcodeCount+1] = parts[1]
 		}
 
-		opcodeCount += InstructionSizeMap[OpcodeMap[opcodeName].Type]
+		instructionType := getInstructionType(parts)
+		opcodeCount += InstructionSizeMap[instructionType]
 	}
 
 	a.OpcodeCount = opcodeCount
@@ -113,12 +114,18 @@ func (a Assembler) secondPass() ([]uint8, error) {
 		}
 
 		opcodeName := parts[0]
-		instruction, ok := OpcodeMap[opcodeName]
+		instructionType := getInstructionType(parts)
+		instruction, ok := OpcodeMap[OpcodeKey{opcodeName, instructionType}]
 		if !ok {
 			return nil, NewAssemblerError(INVALID_OPCODE, i, 0, opcodeName, "Invalid opcode")
 		}
 
-		bytes, err := a.ParseMap[opcodeName](i, parts, opcodeName, instruction.Opcode)
+		bytes, err := a.ParseMap[OpcodeKey{opcodeName, instructionType}](
+			i,
+			parts,
+			opcodeName,
+			instruction,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -444,4 +451,52 @@ func validValue(value int) bool {
 
 func validAddress(address int) bool {
 	return address >= 0 && address < TotalMemorySize
+}
+
+func getInstructionType(parts []string) InstructionType {
+	if len(parts) == 1 {
+		return INST_NONE
+	}
+
+	if len(parts) == 2 {
+		if parts[1][0] == 'R' {
+			lInstructions := []string{"CALL", "JE", "JNE", "JG", "JL", "JGE", "JLE", "JMP"}
+			if slices.Contains(lInstructions, parts[0]) {
+				return INST_RL
+			} else {
+				return INST_R
+			}
+		} else {
+			vInstructions := []string{"PRINT", "PUSH"}
+			if slices.Contains(vInstructions, parts[1]) {
+				return INST_V
+			} else {
+				lInstructions := []string{"CALL", "JE", "JNE", "JG", "JL", "JGE", "JLE", "JMP"}
+				if slices.Contains(lInstructions, parts[0]) {
+					return INST_AL
+				} else {
+					return INST_A
+				}
+			}
+		}
+	}
+
+	if len(parts) == 3 {
+		if parts[1][0] == 'R' {
+			if parts[2][0] == 'R' {
+				return INST_RR
+			} else {
+				raInstructions := []string{"LOADM", "STORE"}
+				if slices.Contains(raInstructions, parts[0]) {
+					return INST_RA
+				} else {
+					return INST_RV
+				}
+			}
+		} else {
+			return INST_AV
+		}
+	}
+
+	return INST_NONE
 }

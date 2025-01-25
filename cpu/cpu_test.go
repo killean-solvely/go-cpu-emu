@@ -20,19 +20,19 @@ func TestCPUExecution(t *testing.T) {
 	cpu := NewCPU()
 	mem := NewMemory()
 
-	mem.Write(CodeMemoryStart+0, uint8(OP_LOAD))
+	mem.Write(CodeMemoryStart+0, uint8(OP_LOAD_RV))
 	mem.Write(CodeMemoryStart+1, 0)
 	mem.Write(CodeMemoryStart+2, 42)
 
-	mem.Write(CodeMemoryStart+3, uint8(OP_LOAD))
+	mem.Write(CodeMemoryStart+3, uint8(OP_LOAD_RV))
 	mem.Write(CodeMemoryStart+4, 1)
 	mem.Write(CodeMemoryStart+5, 10)
 
-	mem.Write(CodeMemoryStart+6, uint8(OP_ADD))
+	mem.Write(CodeMemoryStart+6, uint8(OP_ADD_RR))
 	mem.Write(CodeMemoryStart+7, 0)
 	mem.Write(CodeMemoryStart+8, 1)
 
-	mem.Write(CodeMemoryStart+9, uint8(OP_HLT))
+	mem.Write(CodeMemoryStart+9, uint8(OP_HLT_NONE))
 
 	cpu.Execute(mem)
 

@@ -166,8 +166,5 @@ PRINT REG
 Print a string at an address
 PRINTS ADDR
 
-Print a string at a register
-PRINTS REG
-
 End the program
 HLT

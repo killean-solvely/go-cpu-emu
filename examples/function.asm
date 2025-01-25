@@ -15,18 +15,18 @@ numbers:
 
   # Print numbers from 0 to 9
   numbers_loop:
-    STORE_REG_REG R2 R0
+    STORE R2 R0
     INC R0
     INC R2
-    CMP_REG_REG R0 R1
+    CMP R0 R1
     JLE numbers_loop
 
   LOAD R3 10
-  STORE_REG_REG R2 R3
+  STORE R2 R3
   INC R2
   LOAD R3 0
-  STORE_REG_REG R2 R3
-  PRINT_MEM 0
+  STORE R2 R3
+  PRINTS 0
 
   RET
 
@@ -41,18 +41,18 @@ lowercase:
 
   # Print lowercase letters from a to z
   lowercase_loop:
-    STORE_REG_REG R2 R0
+    STORE R2 R0
     INC R0
     INC R2
-    CMP_REG_REG R0 R1
+    CMP R0 R1
     JLE lowercase_loop
 
   LOAD R3 10
-  STORE_REG_REG R2 R3
+  STORE R2 R3
   INC R2
   LOAD R3 0
-  STORE_REG_REG R2 R3
-  PRINT_MEM 0
+  STORE R2 R3
+  PRINTS 0
 
   RET
 
@@ -67,17 +67,17 @@ uppercase:
 
   # Print uppercase letters from A to Z
   uppercase_loop:
-    STORE_REG_REG R2 R0
+    STORE R2 R0
     INC R0
     INC R2
-    CMP_REG_REG R0 R1
+    CMP R0 R1
     JLE uppercase_loop
 
   LOAD R3 10
-  STORE_REG_REG R2 R3
+  STORE R2 R3
   INC R2
   LOAD R3 0
-  STORE_REG_REG R2 R3
-  PRINT_MEM 0
+  STORE R2 R3
+  PRINTS 0
 
   RET

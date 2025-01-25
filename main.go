@@ -34,7 +34,7 @@ func main() {
 
 	bytecode, err := asm.Assemble()
 	if err != nil {
-		return
+		log.Fatalf("Failed to assemble code: %v", err)
 	}
 
 	cpuInstance := cpu.NewCPU()
