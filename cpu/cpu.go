@@ -74,6 +74,10 @@ func (c *CPU) Execute(memory *Memory) {
 			reg, value := c.prepRVInstruction(memory)
 			c.Registers[reg] = value
 
+		case OP_LOADM:
+			reg, address := c.prepRAInstruction(memory)
+			c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
+
 		case OP_STORE_VAL:
 			address, value := c.prepAVInstruction(memory)
 			memory.WriteStoredMemory(uint16(address), value)
@@ -85,10 +89,6 @@ func (c *CPU) Execute(memory *Memory) {
 		case OP_STORE_REG_REG:
 			reg1, reg2 := c.prepRRInstruction(memory)
 			memory.WriteStoredMemory(uint16(c.Registers[reg1]), c.Registers[reg2])
-
-		case OP_LOAD_MEM:
-			reg, address := c.prepRAInstruction(memory)
-			c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
 
 		case OP_ADD:
 			reg1, reg2 := c.prepRRInstruction(memory)
@@ -142,14 +142,6 @@ func (c *CPU) Execute(memory *Memory) {
 			reg := c.prepRInstruction(memory)
 			c.Registers[reg]--
 
-		case OP_JMP:
-			address := c.prepAInstruction(memory)
-			c.ProgramCounter = uint16(address)
-
-		case OP_JMP_REG:
-			reg := c.prepRInstruction(memory)
-			c.ProgramCounter = uint16(c.Registers[reg])
-
 		case OP_PUSH:
 			value := c.prepVInstruction(memory)
 			c.Stack.Push(value)
@@ -173,6 +165,14 @@ func (c *CPU) Execute(memory *Memory) {
 		case OP_CMP_REG_REG:
 			reg1, reg2 := c.prepRRInstruction(memory)
 			c.Flags.Compare(c.Registers[reg1], c.Registers[reg2])
+
+		case OP_JMP:
+			address := c.prepAInstruction(memory)
+			c.ProgramCounter = uint16(address)
+
+		case OP_JMP_REG:
+			reg := c.prepRInstruction(memory)
+			c.ProgramCounter = uint16(c.Registers[reg])
 
 		case OP_JE:
 			address := c.prepAInstruction(memory)
