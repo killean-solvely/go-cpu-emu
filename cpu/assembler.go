@@ -249,7 +249,7 @@ func Assemble(program []string) ([]uint8, error) {
 }
 
 func validRegister(reg string) bool {
-	if reg != "R0" && reg != "R1" && reg != "R2" && reg != "R3" {
+	if _, ok := RegisterMap[reg]; !ok {
 		return false
 	}
 	return true
