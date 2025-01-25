@@ -17,202 +17,228 @@ func Assemble(program []string) ([]uint8, error) {
 
 		switch parts[0] {
 		case "LOAD":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("LOAD instruction must have 2 operands: %s", line)
+			bytes, err := parseRV(parts, "LOAD", OP_LOAD)
+			if err != nil {
+				return nil, err
 			}
-			reg, err := strconv.Atoi(parts[1])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in LOAD instruction: %s", line)
-			}
-			value, err := strconv.Atoi(parts[2])
-			if err != nil || !validValue(value) {
-				return nil, fmt.Errorf("Invalid value in LOAD instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_LOAD, uint8(reg), uint8(value))
+			bytecode = append(bytecode, bytes...)
 
 		case "STORE_VAL":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("STORE_VAL instruction must have 2 operands: %s", line)
+			bytes, err := parseAV(parts, "STORE_VAL", OP_STORE_VAL)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validStoredMemoryAddress(address) {
-				return nil, fmt.Errorf("Invalid address in STORE_VAL instruction: %s", line)
-			}
-			value, err := strconv.Atoi(parts[2])
-			if err != nil || !validValue(value) {
-				return nil, fmt.Errorf("Invalid value in STORE_VAL instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_STORE_VAL, uint8(address), uint8(value))
+			bytecode = append(bytecode, bytes...)
 
 		case "STORE_REG":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("STORE_REG instruction must have 2 operands: %s", line)
+			bytes, err := parseAR(parts, "STORE_REG", OP_STORE_REG)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validStoredMemoryAddress(address) {
-				return nil, fmt.Errorf("Invalid address in STORE_REG instruction: %s", line)
-			}
-			reg, err := strconv.Atoi(parts[2])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in STORE_REG instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_STORE_REG, uint8(address), uint8(reg))
+			bytecode = append(bytecode, bytes...)
 
 		case "LOAD_MEM":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("LOAD_MEM instruction must have 2 operands: %s", line)
+			bytes, err := parseRA(parts, "LOAD_MEM", OP_LOAD_MEM)
+			if err != nil {
+				return nil, err
 			}
-			reg, err := strconv.Atoi(parts[1])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in LOAD_MEM instruction: %s", line)
-			}
-			address, err := strconv.Atoi(parts[2])
-			if err != nil || !validStoredMemoryAddress(address) {
-				return nil, fmt.Errorf("Invalid address in LOAD_MEM instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_LOAD_MEM, uint8(reg), uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "ADD":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("ADD instruction must have 2 operands: %s", line)
+			bytes, err := parseRR(parts, "ADD", OP_ADD)
+			if err != nil {
+				return nil, err
 			}
-			reg1, err := strconv.Atoi(parts[1])
-			reg2, err := strconv.Atoi(parts[2])
-			if err != nil || !validRegister(reg1) || !validRegister(reg2) {
-				return nil, fmt.Errorf("Invalid register in ADD instruction: %s", line)
+			bytecode = append(bytecode, bytes...)
+
+		case "SUB":
+			bytes, err := parseRR(parts, "SUB", OP_SUB)
+			if err != nil {
+				return nil, err
 			}
-			bytecode = append(bytecode, OP_ADD, uint8(reg1), uint8(reg2))
+			bytecode = append(bytecode, bytes...)
+
+		case "MUL":
+			bytes, err := parseRR(parts, "MUL", OP_MUL)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "DIV":
+			bytes, err := parseRR(parts, "DIV", OP_DIV)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "MOD":
+			bytes, err := parseRR(parts, "MOD", OP_MOD)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "AND":
+			bytes, err := parseRR(parts, "AND", OP_AND)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "OR":
+			bytes, err := parseRR(parts, "OR", OP_OR)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "XOR":
+			bytes, err := parseRR(parts, "XOR", OP_XOR)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "NOT":
+			bytes, err := parseR(parts, "NOT", OP_NOT)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "SHL":
+			bytes, err := parseR(parts, "SHL", OP_SHL)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "SHR":
+			bytes, err := parseR(parts, "SHR", OP_SHR)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "INC":
+			bytes, err := parseR(parts, "INC", OP_INC)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "DEC":
+			bytes, err := parseR(parts, "DEC", OP_DEC)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
 
 		case "JMP":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JMP instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JMP", OP_JMP)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JMP instruction: %s", line)
+			bytecode = append(bytecode, bytes...)
+
+		case "JMP_REG":
+			bytes, err := parseR(parts, "JMP_REG", OP_JMP_REG)
+			if err != nil {
+				return nil, err
 			}
-			bytecode = append(bytecode, OP_JMP, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "PUSH":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("PUSH instruction must have 1 operand: %s", line)
+			bytes, err := parseV(parts, "PUSH", OP_PUSH)
+			if err != nil {
+				return nil, err
 			}
-			value, err := strconv.Atoi(parts[1])
-			if err != nil || !validValue(value) {
-				return nil, fmt.Errorf("Invalid value in PUSH instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_PUSH, uint8(value))
+			bytecode = append(bytecode, bytes...)
 
 		case "PUSH_REG":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("PUSH_REG instruction must have 1 operand: %s", line)
+			bytes, err := parseR(parts, "PUSH_REG", OP_PUSH_REG)
+			if err != nil {
+				return nil, err
 			}
-			reg, err := strconv.Atoi(parts[1])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in PUSH_REG instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_PUSH_REG, uint8(reg))
+			bytecode = append(bytecode, bytes...)
 
 		case "POP":
-			bytecode = append(bytecode, OP_POP)
+			bytes, err := parseNone(parts, "POP", OP_POP)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
 
 		case "POP_REG":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("POP_REG instruction must have 1 operand: %s", line)
+			bytes, err := parseR(parts, "POP_REG", OP_POP_REG)
+			if err != nil {
+				return nil, err
 			}
-			reg, err := strconv.Atoi(parts[1])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in POP_REG instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_POP_REG, uint8(reg))
+			bytecode = append(bytecode, bytes...)
 
 		case "CMP_REG_VAL":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("CMP_REG_VAL instruction must have 2 operands: %s", line)
+			bytes, err := parseRV(parts, "CMP_REG_VAL", OP_CMP_REG_VAL)
+			if err != nil {
+				return nil, err
 			}
-			reg, err := strconv.Atoi(parts[1])
-			if err != nil || !validRegister(reg) {
-				return nil, fmt.Errorf("Invalid register in CMP_REG_VAL instruction: %s", line)
-			}
-			value, err := strconv.Atoi(parts[2])
-			if err != nil || !validValue(value) {
-				return nil, fmt.Errorf("Invalid value in CMP_REG_VAL instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_CMP_REG_VAL, uint8(reg), uint8(value))
+			bytecode = append(bytecode, bytes...)
 
 		case "CMP_REG_REG":
-			if len(parts) != 3 {
-				return nil, fmt.Errorf("CMP_REG_REG instruction must have 2 operands: %s", line)
+			bytes, err := parseRR(parts, "CMP_REG_REG", OP_CMP_REG_REG)
+			if err != nil {
+				return nil, err
 			}
-			reg1, err := strconv.Atoi(parts[1])
-			reg2, err := strconv.Atoi(parts[2])
-			if err != nil || !validRegister(reg1) || !validRegister(reg2) {
-				return nil, fmt.Errorf("Invalid register in CMP_REG_REG instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_CMP_REG_REG, uint8(reg1), uint8(reg2))
+			bytecode = append(bytecode, bytes...)
 
 		case "JE":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JE instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JE", OP_JE)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JE instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JE, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "JNE":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JNE instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JNE", OP_JNE)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JNE instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JNE, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "JG":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JG instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JG", OP_JG)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JG instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JG, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "JGE":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JGE instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JGE", OP_JGE)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JGE instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JGE, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "JL":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JL instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JL", OP_JL)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JL instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JL, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "JLE":
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("JLE instruction must have 1 operand: %s", line)
+			bytes, err := parseA(parts, "JLE", OP_JLE)
+			if err != nil {
+				return nil, err
 			}
-			address, err := strconv.Atoi(parts[1])
-			if err != nil || !validCodeAddress(address) {
-				return nil, fmt.Errorf("Invalid address in JLE instruction: %s", line)
-			}
-			bytecode = append(bytecode, OP_JLE, uint8(address))
+			bytecode = append(bytecode, bytes...)
 
 		case "HLT":
-			bytecode = append(bytecode, OP_HLT)
+			bytes, err := parseNone(parts, "HLT", OP_HLT)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
 
 		default:
 			return nil, fmt.Errorf("Unknown instruction: %s", parts[0])
@@ -236,4 +262,116 @@ func validStoredMemoryAddress(address int) bool {
 
 func validCodeAddress(address int) bool {
 	return address >= CodeMemoryStart && address < TotalMemorySize
+}
+
+func parseRR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
+	}
+	reg1, err := strconv.Atoi(parts[1])
+	reg2, err := strconv.Atoi(parts[2])
+	if err != nil || !validRegister(reg1) || !validRegister(reg2) {
+		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(reg1), uint8(reg2)}, nil
+}
+
+func parseRV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
+	}
+	reg, err := strconv.Atoi(parts[1])
+	if err != nil || !validRegister(reg) {
+		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
+	}
+	value, err := strconv.Atoi(parts[2])
+	if err != nil || !validValue(value) {
+		return nil, fmt.Errorf("Invalid value in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(reg), uint8(value)}, nil
+}
+
+func parseRA(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
+	}
+	reg, err := strconv.Atoi(parts[1])
+	if err != nil || !validRegister(reg) {
+		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
+	}
+	address, err := strconv.Atoi(parts[2])
+	if err != nil || !validStoredMemoryAddress(address) {
+		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(reg), uint8(address)}, nil
+}
+
+func parseAR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
+	}
+	address, err := strconv.Atoi(parts[1])
+	if err != nil || !validStoredMemoryAddress(address) {
+		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
+	}
+	reg, err := strconv.Atoi(parts[2])
+	if err != nil || !validRegister(reg) {
+		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(address), uint8(reg)}, nil
+}
+
+func parseAV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
+	}
+	address, err := strconv.Atoi(parts[1])
+	if err != nil || !validStoredMemoryAddress(address) {
+		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
+	}
+	value, err := strconv.Atoi(parts[2])
+	if err != nil || !validValue(value) {
+		return nil, fmt.Errorf("Invalid value in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(address), uint8(value)}, nil
+}
+
+func parseA(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("%s instruction must have 1 operand", opcodeName)
+	}
+	address, err := strconv.Atoi(parts[1])
+	if err != nil || !validStoredMemoryAddress(address) {
+		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(address)}, nil
+}
+
+func parseV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("%s instruction must have 1 operand", opcodeName)
+	}
+	value, err := strconv.Atoi(parts[1])
+	if err != nil || !validValue(value) {
+		return nil, fmt.Errorf("Invalid value in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(value)}, nil
+}
+
+func parseR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("%s instruction must have 1 operand", opcodeName)
+	}
+	reg, err := strconv.Atoi(parts[1])
+	if err != nil || !validRegister(reg) {
+		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
+	}
+	return []uint8{opcode, uint8(reg)}, nil
+}
+
+func parseNone(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+	if len(parts) != 1 {
+		return nil, fmt.Errorf("%s instruction must have 0 operands", opcodeName)
+	}
+	return []uint8{opcode}, nil
 }

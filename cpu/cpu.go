@@ -86,9 +86,88 @@ func (c *CPU) Execute(memory *Memory) {
 			c.ProgramCounter++
 			c.Registers[reg1] += c.Registers[reg2]
 
+		case OP_SUB:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] -= c.Registers[reg2]
+
+		case OP_MUL:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] *= c.Registers[reg2]
+
+		case OP_DIV:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] /= c.Registers[reg2]
+
+		case OP_MOD:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] %= c.Registers[reg2]
+
+		case OP_AND:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] &= c.Registers[reg2]
+
+		case OP_OR:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] |= c.Registers[reg2]
+
+		case OP_XOR:
+			reg1 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			reg2 := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg1] ^= c.Registers[reg2]
+
+		case OP_NOT:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg] = ^c.Registers[reg]
+
+		case OP_SHL:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg] <<= 1
+
+		case OP_SHR:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg] >>= 1
+
+		case OP_INC:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg]++
+
+		case OP_DEC:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.Registers[reg]--
+
 		case OP_JMP:
 			address := memory.Read(c.ProgramCounter)
 			c.ProgramCounter = uint16(address)
+
+		case OP_JMP_REG:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			c.ProgramCounter = uint16(c.Registers[reg])
 
 		case OP_PUSH:
 			value := memory.Read(c.ProgramCounter)
