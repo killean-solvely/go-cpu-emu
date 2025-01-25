@@ -4,9 +4,9 @@ import "testing"
 
 func TestAssembler(t *testing.T) {
 	program := []string{
-		"LOAD 0 42",
-		"LOAD 1 10",
-		"ADD 0 1",
+		"LOAD R0 42",
+		"LOAD R1 10",
+		"ADD R0 R1",
 		"HLT",
 	}
 

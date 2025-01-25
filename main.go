@@ -8,9 +8,9 @@ import (
 
 func main() {
 	program := []string{
-		"LOAD 0 5",
-		"LOAD 1 7",
-		"ADD 0 1",
+		"LOAD R0 5",
+		"LOAD R1 7",
+		"ADD R0 R1",
 		"HLT",
 	}
 

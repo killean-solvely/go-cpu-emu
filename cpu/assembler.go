@@ -248,8 +248,11 @@ func Assemble(program []string) ([]uint8, error) {
 	return bytecode, nil
 }
 
-func validRegister(reg int) bool {
-	return reg >= 0 && reg < RegisterCount
+func validRegister(reg string) bool {
+	if reg != "R0" && reg != "R1" && reg != "R2" && reg != "R3" {
+		return false
+	}
+	return true
 }
 
 func validValue(value int) bool {
@@ -268,42 +271,38 @@ func parseRR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
 	}
-	reg1, err := strconv.Atoi(parts[1])
-	reg2, err := strconv.Atoi(parts[2])
-	if err != nil || !validRegister(reg1) || !validRegister(reg2) {
+	if !validRegister(parts[1]) || !validRegister(parts[2]) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
-	return []uint8{opcode, uint8(reg1), uint8(reg2)}, nil
+	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(RegisterMap[parts[2]])}, nil
 }
 
 func parseRV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
 	}
-	reg, err := strconv.Atoi(parts[1])
-	if err != nil || !validRegister(reg) {
+	if !validRegister(parts[1]) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
 	value, err := strconv.Atoi(parts[2])
 	if err != nil || !validValue(value) {
 		return nil, fmt.Errorf("Invalid value in %s instruction", opcodeName)
 	}
-	return []uint8{opcode, uint8(reg), uint8(value)}, nil
+	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(value)}, nil
 }
 
 func parseRA(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
 	}
-	reg, err := strconv.Atoi(parts[1])
-	if err != nil || !validRegister(reg) {
+	if !validRegister(parts[1]) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
 	address, err := strconv.Atoi(parts[2])
 	if err != nil || !validStoredMemoryAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
-	return []uint8{opcode, uint8(reg), uint8(address)}, nil
+	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(address)}, nil
 }
 
 func parseAR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
@@ -314,11 +313,10 @@ func parseAR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 	if err != nil || !validStoredMemoryAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
-	reg, err := strconv.Atoi(parts[2])
-	if err != nil || !validRegister(reg) {
+	if !validRegister(parts[2]) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
-	return []uint8{opcode, uint8(address), uint8(reg)}, nil
+	return []uint8{opcode, uint8(address), uint8(RegisterMap[parts[2]])}, nil
 }
 
 func parseAV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
@@ -362,11 +360,10 @@ func parseR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("%s instruction must have 1 operand", opcodeName)
 	}
-	reg, err := strconv.Atoi(parts[1])
-	if err != nil || !validRegister(reg) {
+	if !validRegister(parts[1]) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
-	return []uint8{opcode, uint8(reg)}, nil
+	return []uint8{opcode, uint8(RegisterMap[parts[1]])}, nil
 }
 
 func parseNone(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {

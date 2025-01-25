@@ -2,6 +2,21 @@ package cpu
 
 const RegisterCount = 4
 
+// Register names
+const (
+	R0 = iota
+	R1
+	R2
+	R3
+)
+
+var RegisterMap = map[string]uint8{
+	"R0": R0,
+	"R1": R1,
+	"R2": R2,
+	"R3": R3,
+}
+
 type Flags struct {
 	Equal   uint8
 	Greater uint8
