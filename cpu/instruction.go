@@ -32,6 +32,8 @@ const (
 	OP_JGE                // Jump if greater or equal
 	OP_JL                 // Jump if less
 	OP_JLE                // Jump if less or equal
+	OP_PRINT              // Print a value
+	OP_PRINT_REG          // Print a value from a register
 	OP_HLT                // Halt execution
 )
 

@@ -8,9 +8,14 @@ import (
 
 func main() {
 	program := []string{
-		"LOAD R0 5",
-		"LOAD R1 7",
-		"ADD R0 R1",
+		"LOAD R0 0",
+		"LOAD R1 10",
+		"CMP_REG_REG R0 R1",
+		"JE 72",
+		"PRINT_REG R0",
+		"INC R0",
+		"JMP 61",
+		"PRINT_REG R1",
 		"HLT",
 	}
 

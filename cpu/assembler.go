@@ -233,6 +233,20 @@ func Assemble(program []string) ([]uint8, error) {
 			}
 			bytecode = append(bytecode, bytes...)
 
+		case "PRINT":
+			bytes, err := parseV(parts, "PRINT", OP_PRINT)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
+		case "PRINT_REG":
+			bytes, err := parseR(parts, "PRINT_REG", OP_PRINT_REG)
+			if err != nil {
+				return nil, err
+			}
+			bytecode = append(bytecode, bytes...)
+
 		case "HLT":
 			bytes, err := parseNone(parts, "HLT", OP_HLT)
 			if err != nil {
@@ -259,12 +273,8 @@ func validValue(value int) bool {
 	return value >= 0 && value <= 255
 }
 
-func validStoredMemoryAddress(address int) bool {
-	return address >= 0 && address < StoredMemorySize
-}
-
-func validCodeAddress(address int) bool {
-	return address >= CodeMemoryStart && address < TotalMemorySize
+func validAddress(address int) bool {
+	return address >= 0 && address < TotalMemorySize
 }
 
 func parseRR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
@@ -299,7 +309,7 @@ func parseRA(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 		return nil, fmt.Errorf("Invalid register in %s instruction", opcodeName)
 	}
 	address, err := strconv.Atoi(parts[2])
-	if err != nil || !validStoredMemoryAddress(address) {
+	if err != nil || !validAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
 	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(address)}, nil
@@ -310,7 +320,7 @@ func parseAR(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
 	}
 	address, err := strconv.Atoi(parts[1])
-	if err != nil || !validStoredMemoryAddress(address) {
+	if err != nil || !validAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
 	if !validRegister(parts[2]) {
@@ -324,7 +334,7 @@ func parseAV(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 		return nil, fmt.Errorf("%s instruction must have 2 operands", opcodeName)
 	}
 	address, err := strconv.Atoi(parts[1])
-	if err != nil || !validStoredMemoryAddress(address) {
+	if err != nil || !validAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
 	value, err := strconv.Atoi(parts[2])
@@ -339,7 +349,7 @@ func parseA(parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
 		return nil, fmt.Errorf("%s instruction must have 1 operand", opcodeName)
 	}
 	address, err := strconv.Atoi(parts[1])
-	if err != nil || !validStoredMemoryAddress(address) {
+	if err != nil || !validAddress(address) {
 		return nil, fmt.Errorf("Invalid address in %s instruction", opcodeName)
 	}
 	return []uint8{opcode, uint8(address)}, nil

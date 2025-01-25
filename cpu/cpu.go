@@ -1,5 +1,7 @@
 package cpu
 
+import "fmt"
+
 const RegisterCount = 4
 
 // Register names
@@ -258,6 +260,16 @@ func (c *CPU) Execute(memory *Memory) {
 			if c.Flags.Less == 1 || c.Flags.Equal == 1 {
 				c.ProgramCounter = uint16(address)
 			}
+
+		case OP_PRINT:
+			value := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			fmt.Println(value)
+
+		case OP_PRINT_REG:
+			reg := memory.Read(c.ProgramCounter)
+			c.ProgramCounter++
+			fmt.Println(c.Registers[reg])
 
 		case OP_HLT:
 			return
