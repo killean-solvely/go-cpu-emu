@@ -275,7 +275,6 @@ func (c *CPU) Execute(memory *Memory) {
 			return
 
 		default:
-			codeData := memory.Data[CodeMemoryStart:]
 			panic("Unknown opcode")
 		}
 	}
