@@ -214,6 +214,20 @@ func (c *CPU) Execute(memory *Memory) {
 			reg := c.prepRInstruction(memory)
 			fmt.Println(c.Registers[reg])
 
+		case OP_PRINT_MEM:
+			address := c.prepAInstruction(memory)
+			// Build the string up from memory. The string is null-terminated.
+			var str []byte
+			for {
+				value := memory.ReadStoredMemory(uint16(address))
+				if value == 0 {
+					break
+				}
+				str = append(str, value)
+				address++
+			}
+			fmt.Println(string(str))
+
 		case OP_HLT:
 			return
 

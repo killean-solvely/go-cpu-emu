@@ -36,6 +36,7 @@ const (
 	OP_JLE                       // Jump if less or equal
 	OP_PRINT                     // Print a value
 	OP_PRINT_REG                 // Print a value from a register
+	OP_PRINT_MEM                 // Print a string from stored memory
 	OP_HLT                       // Halt execution
 )
 
@@ -94,6 +95,7 @@ var OpcodeMap = map[string]OpcodeDefinition{
 	"JLE":         {Type: INST_A_L, Opcode: OP_JLE},
 	"PRINT":       {Type: INST_V, Opcode: OP_PRINT},
 	"PRINT_REG":   {Type: INST_R, Opcode: OP_PRINT_REG},
+	"PRINT_MEM":   {Type: INST_A, Opcode: OP_PRINT_MEM},
 	"HLT":         {Type: INST_NONE, Opcode: OP_HLT},
 }
 

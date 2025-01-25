@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -178,7 +177,15 @@ func (a *Assembler) parseRV(
 	}
 	value, err := strconv.Atoi(parts[2])
 	if err != nil || !validValue(value) {
-		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		if convErr, ok := err.(*strconv.NumError); ok {
+			if len(convErr.Num) == 1 && parts[2][0] >= 0 && parts[2][0] <= 255 {
+				value = int(parts[2][0])
+			} else {
+				return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+			}
+		} else {
+			return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
+		}
 	}
 	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(value)}, nil
 }
@@ -268,8 +275,8 @@ func (a *Assembler) parseAV(
 	value, err := strconv.Atoi(parts[2])
 	if err != nil || !validValue(value) {
 		if convErr, ok := err.(*strconv.NumError); ok {
-			if len(convErr.Num) == 1 && parts[1][0] >= 0 && parts[1][0] <= 255 {
-				value = int(parts[1][0])
+			if len(convErr.Num) == 1 && parts[2][0] >= 0 && parts[2][0] <= 255 {
+				value = int(parts[2][0])
 			} else {
 				return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 			}
@@ -352,8 +359,8 @@ func (a *Assembler) parseV(
 	value, err := strconv.Atoi(parts[1])
 	if err != nil || !validValue(value) {
 		if convErr, ok := err.(*strconv.NumError); ok {
-			if len(convErr.Num) == 1 && parts[1][0] >= 0 && parts[1][0] <= 255 {
-				value = int(parts[1][0])
+			if len(convErr.Num) == 1 && parts[2][0] >= 0 && parts[2][0] <= 255 {
+				value = int(parts[2][0])
 			} else {
 				return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 			}
