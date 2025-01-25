@@ -15,7 +15,7 @@ const (
 
 type AssemblerError struct {
 	Type    AssemblerErrorType
-	Opcode  uint8
+	Opcode  Opcode
 	Opname  string
 	Message string
 	Line    int
@@ -24,7 +24,7 @@ type AssemblerError struct {
 func NewAssemblerError(
 	t AssemblerErrorType,
 	l int,
-	opcode uint8,
+	opcode Opcode,
 	opname string,
 	message string,
 ) *AssemblerError {

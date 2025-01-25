@@ -1,360 +1,135 @@
 package cpu
 
 import (
-	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
 
-func Assemble(program []string) ([]uint8, error) {
-	var bytecode []uint8
+type Assembler struct {
+	Program        []string
+	OpcodeCount    int
+	LabelAddresses map[string]int // label name to label address
+	JumpAddresses  map[int]string // jump location to label name
+	ParseMap       map[string]func(int, []string, string, Opcode) ([]uint8, error)
+}
 
-	bookmarks := make(map[string]int)
-	lookback := make(map[string]int)
+func NewAssembler(program []string) *Assembler {
+	labelAddresses := make(map[string]int)
+	jumpAddresses := make(map[int]string)
+	asm := &Assembler{
+		Program:        program,
+		OpcodeCount:    0,
+		LabelAddresses: labelAddresses,
+		JumpAddresses:  jumpAddresses,
+		ParseMap:       make(map[string]func(int, []string, string, Opcode) ([]uint8, error)),
+	}
+
+	var instructionTypeToParseFunc = map[InstructionType]func(int, []string, string, Opcode) ([]uint8, error){
+		INST_R_R:  asm.parseRR,
+		INST_R_V:  asm.parseRV,
+		INST_R_A:  asm.parseRA,
+		INST_R_L:  asm.parseRL,
+		INST_A_V:  asm.parseAV,
+		INST_A_L:  asm.parseAL,
+		INST_A:    asm.parseA,
+		INST_V:    asm.parseV,
+		INST_R:    asm.parseR,
+		INST_NONE: asm.parseNone,
+	}
+
+	for opcodeString, instruction := range OpcodeMap {
+		asm.ParseMap[opcodeString] = instructionTypeToParseFunc[instruction.Type]
+	}
+
+	return asm
+}
+
+func (a *Assembler) Assemble() ([]uint8, error) {
+	a.firstPass()
+	bytecode, err := a.secondPass()
+	if err != nil {
+		return nil, err
+	}
+	return bytecode, nil
+}
+
+// First pass goes through and fills out the labels
+func (a *Assembler) firstPass() {
 	opcodeCount := 0
-	for i, line := range program {
+	for _, line := range a.Program {
 		parts := strings.Fields(line)
 		if len(parts) == 0 {
 			continue
 		}
 
+		// If the line is a label, add it to the label map
 		if len(parts) == 1 && parts[0][len(parts[0])-1] == ':' {
-			bookmarks[parts[0][:len(parts[0])-1]] = opcodeCount + StoredMemorySize
+			labelName := parts[0][:len(parts[0])-1]
+			a.LabelAddresses[labelName] = opcodeCount + StoredMemorySize
 			continue
 		}
 
-		switch parts[0] {
-		case "LOAD":
-			bytes, err := parseRV(i, parts, "LOAD", OP_LOAD)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
+		opcodeName := parts[0]
 
-		case "STORE_VAL":
-			bytes, err := parseAV(i, parts, "STORE_VAL", OP_STORE_VAL)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "STORE_REG":
-			bytes, err := parseAR(i, parts, "STORE_REG", OP_STORE_REG)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "LOAD_MEM":
-			bytes, err := parseRA(i, parts, "LOAD_MEM", OP_LOAD_MEM)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "ADD":
-			bytes, err := parseRR(i, parts, "ADD", OP_ADD)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "SUB":
-			bytes, err := parseRR(i, parts, "SUB", OP_SUB)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "MUL":
-			bytes, err := parseRR(i, parts, "MUL", OP_MUL)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "DIV":
-			bytes, err := parseRR(i, parts, "DIV", OP_DIV)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "MOD":
-			bytes, err := parseRR(i, parts, "MOD", OP_MOD)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "AND":
-			bytes, err := parseRR(i, parts, "AND", OP_AND)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "OR":
-			bytes, err := parseRR(i, parts, "OR", OP_OR)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "XOR":
-			bytes, err := parseRR(i, parts, "XOR", OP_XOR)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "NOT":
-			bytes, err := parseR(i, parts, "NOT", OP_NOT)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "SHL":
-			bytes, err := parseR(i, parts, "SHL", OP_SHL)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "SHR":
-			bytes, err := parseR(i, parts, "SHR", OP_SHR)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "INC":
-			bytes, err := parseR(i, parts, "INC", OP_INC)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "DEC":
-			bytes, err := parseR(i, parts, "DEC", OP_DEC)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JMP":
-			bytes, err := parseAL(i, parts, "JMP", OP_JMP, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JMP_REG":
-			bytes, err := parseRL(i, parts, "JMP_REG", OP_JMP_REG, bookmarks)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "PUSH":
-			bytes, err := parseV(i, parts, "PUSH", OP_PUSH)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "PUSH_REG":
-			bytes, err := parseR(i, parts, "PUSH_REG", OP_PUSH_REG)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "POP":
-			bytes, err := parseNone(i, parts, "POP", OP_POP)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "POP_REG":
-			bytes, err := parseR(i, parts, "POP_REG", OP_POP_REG)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "CMP_REG_VAL":
-			bytes, err := parseRV(i, parts, "CMP_REG_VAL", OP_CMP_REG_VAL)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "CMP_REG_REG":
-			bytes, err := parseRR(i, parts, "CMP_REG_REG", OP_CMP_REG_REG)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JE":
-			bytes, err := parseAL(i, parts, "JE", OP_JE, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JNE":
-			bytes, err := parseAL(i, parts, "JNE", OP_JNE, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JG":
-			bytes, err := parseAL(i, parts, "JG", OP_JG, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JGE":
-			bytes, err := parseAL(i, parts, "JGE", OP_JGE, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JL":
-			bytes, err := parseAL(i, parts, "JL", OP_JL, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "JLE":
-			bytes, err := parseAL(i, parts, "JLE", OP_JLE, bookmarks)
-			if err != nil {
-				if err.(*AssemblerError).Type == INVALID_LABEL {
-					lookback[parts[1]] = opcodeCount + len(bytes)
-				} else {
-					return nil, err
-				}
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "PRINT":
-			bytes, err := parseV(i, parts, "PRINT", OP_PRINT)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "PRINT_REG":
-			bytes, err := parseR(i, parts, "PRINT_REG", OP_PRINT_REG)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		case "HLT":
-			bytes, err := parseNone(i, parts, "HLT", OP_HLT)
-			if err != nil {
-				return nil, err
-			}
-			opcodeCount += len(bytes)
-			bytecode = append(bytecode, bytes...)
-
-		default:
-			return nil, fmt.Errorf("Unknown instruction: %s", parts[0])
+		jmpRegisters := []string{"JMP_REG", "JE", "JNE", "JG", "JGE", "JL", "JLE"}
+		if slices.Contains(jmpRegisters, opcodeName) {
+			a.JumpAddresses[opcodeCount+1] = parts[1]
 		}
+
+		opcodeCount += InstructionSizeMap[OpcodeMap[opcodeName].Type]
 	}
 
-	for label, address := range lookback {
-		if _, ok := bookmarks[label]; !ok {
-			return nil, fmt.Errorf("Invalid label in instruction: %s", label)
+	a.OpcodeCount = opcodeCount
+}
+
+// Second pass goes through and fills out the instructions, returning the bytecode
+func (a Assembler) secondPass() ([]uint8, error) {
+	var bytecode []uint8
+
+	for i, line := range a.Program {
+		parts := strings.Fields(line)
+		if len(parts) == 0 {
+			continue
 		}
-		bytecode[address-1] = uint8(bookmarks[label])
+
+		// If the line is a label, skip it
+		if len(parts) == 1 && parts[0][len(parts[0])-1] == ':' {
+			continue
+		}
+
+		opcodeName := parts[0]
+		instruction, ok := OpcodeMap[opcodeName]
+		if !ok {
+			return nil, NewAssemblerError(INVALID_OPCODE, i, 0, opcodeName, "Invalid opcode")
+		}
+
+		bytes, err := a.ParseMap[opcodeName](i, parts, opcodeName, instruction.Opcode)
+		if err != nil {
+			return nil, err
+		}
+
+		bytecode = append(bytecode, bytes...)
+	}
+
+	for jumpAddress, labelName := range a.JumpAddresses {
+		labelAddress, ok := a.LabelAddresses[labelName]
+		if !ok {
+			return nil, NewAssemblerError(INVALID_LABEL, 0, 0, labelName, "Invalid label")
+		}
+
+		bytecode[jumpAddress] = uint8(labelAddress)
 	}
 
 	return bytecode, nil
 }
 
-func validRegister(reg string) bool {
-	if _, ok := RegisterMap[reg]; !ok {
-		return false
-	}
-	return true
-}
-
-func validValue(value int) bool {
-	return value >= 0 && value <= 255
-}
-
-func validAddress(address int) bool {
-	return address >= 0 && address < TotalMemorySize
-}
-
-func parseRR(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseRR(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -373,10 +148,15 @@ func parseRR(line int, parts []string, opcodeName string, opcode uint8) ([]uint8
 			"Invalid register",
 		)
 	}
-	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(RegisterMap[parts[2]])}, nil
+	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(RegisterMap[parts[2]])}, nil
 }
 
-func parseRV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseRV(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -399,10 +179,15 @@ func parseRV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8
 	if err != nil || !validValue(value) {
 		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 	}
-	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(value)}, nil
+	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(value)}, nil
 }
 
-func parseRA(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseRA(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -425,15 +210,14 @@ func parseRA(line int, parts []string, opcodeName string, opcode uint8) ([]uint8
 	if err != nil || !validAddress(address) {
 		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
 	}
-	return []uint8{opcode, uint8(RegisterMap[parts[1]]), uint8(address)}, nil
+	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(address)}, nil
 }
 
-func parseRL(
+func (a *Assembler) parseRL(
 	line int,
 	parts []string,
 	opcodeName string,
-	opcode uint8,
-	bookmarks map[string]int,
+	opcode Opcode,
 ) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, NewAssemblerError(
@@ -444,9 +228,9 @@ func parseRL(
 			"Instruction must have 1 operand",
 		)
 	}
-	if _, ok := bookmarks[parts[1]]; !ok {
+	if _, ok := a.LabelAddresses[parts[1]]; !ok {
 		return []uint8{
-				opcode,
+				uint8(opcode),
 				0,
 			}, NewAssemblerError(
 				INVALID_LABEL,
@@ -456,36 +240,15 @@ func parseRL(
 				"Invalid label",
 			)
 	}
-	return []uint8{opcode, uint8(bookmarks[parts[1]])}, nil
+	return []uint8{uint8(opcode), uint8(a.LabelAddresses[parts[1]])}, nil
 }
 
-func parseAR(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
-	if len(parts) != 3 {
-		return nil, NewAssemblerError(
-			INVALID_OPERAND_COUNT,
-			line,
-			opcode,
-			opcodeName,
-			"Instruction must have 2 operands",
-		)
-	}
-	address, err := strconv.Atoi(parts[1])
-	if err != nil || !validAddress(address) {
-		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
-	}
-	if !validRegister(parts[2]) {
-		return nil, NewAssemblerError(
-			INVALID_REGISTER,
-			line,
-			opcode,
-			opcodeName,
-			"Invalid register",
-		)
-	}
-	return []uint8{opcode, uint8(address), uint8(RegisterMap[parts[2]])}, nil
-}
-
-func parseAV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseAV(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 3 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -503,15 +266,14 @@ func parseAV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8
 	if err != nil || !validValue(value) {
 		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 	}
-	return []uint8{opcode, uint8(address), uint8(value)}, nil
+	return []uint8{uint8(opcode), uint8(address), uint8(value)}, nil
 }
 
-func parseAL(
+func (a *Assembler) parseAL(
 	line int,
 	parts []string,
 	opcodeName string,
-	opcode uint8,
-	bookmarks map[string]int,
+	opcode Opcode,
 ) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, NewAssemblerError(
@@ -522,9 +284,9 @@ func parseAL(
 			"Instruction must have 1 operand",
 		)
 	}
-	if _, ok := bookmarks[parts[1]]; !ok {
+	if _, ok := a.LabelAddresses[parts[1]]; !ok {
 		return []uint8{
-				opcode,
+				uint8(opcode),
 				0,
 			}, NewAssemblerError(
 				INVALID_LABEL,
@@ -534,10 +296,15 @@ func parseAL(
 				"Invalid label",
 			)
 	}
-	return []uint8{opcode, uint8(bookmarks[parts[1]])}, nil
+	return []uint8{uint8(opcode), uint8(a.LabelAddresses[parts[1]])}, nil
 }
 
-func parseA(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseA(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -551,10 +318,15 @@ func parseA(line int, parts []string, opcodeName string, opcode uint8) ([]uint8,
 	if err != nil || !validAddress(address) {
 		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
 	}
-	return []uint8{opcode, uint8(address)}, nil
+	return []uint8{uint8(opcode), uint8(address)}, nil
 }
 
-func parseV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseV(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -568,10 +340,15 @@ func parseV(line int, parts []string, opcodeName string, opcode uint8) ([]uint8,
 	if err != nil || !validValue(value) {
 		return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 	}
-	return []uint8{opcode, uint8(value)}, nil
+	return []uint8{uint8(opcode), uint8(value)}, nil
 }
 
-func parseR(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseR(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 2 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -590,10 +367,15 @@ func parseR(line int, parts []string, opcodeName string, opcode uint8) ([]uint8,
 			"Invalid register",
 		)
 	}
-	return []uint8{opcode, uint8(RegisterMap[parts[1]])}, nil
+	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]])}, nil
 }
 
-func parseNone(line int, parts []string, opcodeName string, opcode uint8) ([]uint8, error) {
+func (a *Assembler) parseNone(
+	line int,
+	parts []string,
+	opcodeName string,
+	opcode Opcode,
+) ([]uint8, error) {
 	if len(parts) != 1 {
 		return nil, NewAssemblerError(
 			INVALID_OPERAND_COUNT,
@@ -603,5 +385,20 @@ func parseNone(line int, parts []string, opcodeName string, opcode uint8) ([]uin
 			"Instruction must have 0 operands",
 		)
 	}
-	return []uint8{opcode}, nil
+	return []uint8{uint8(opcode)}, nil
+}
+
+func validRegister(reg string) bool {
+	if _, ok := RegisterMap[reg]; !ok {
+		return false
+	}
+	return true
+}
+
+func validValue(value int) bool {
+	return value >= 0 && value <= 255
+}
+
+func validAddress(address int) bool {
+	return address >= 0 && address < TotalMemorySize
 }

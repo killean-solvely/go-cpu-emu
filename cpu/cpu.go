@@ -67,7 +67,7 @@ func (c *CPU) Execute(memory *Memory) {
 		opcode := memory.Read(c.ProgramCounter)
 		c.ProgramCounter++
 
-		switch opcode {
+		switch Opcode(opcode) {
 		case OP_LOAD:
 			reg := memory.Read(c.ProgramCounter)
 			c.ProgramCounter++
@@ -275,6 +275,7 @@ func (c *CPU) Execute(memory *Memory) {
 			return
 
 		default:
+			codeData := memory.Data[CodeMemoryStart:]
 			panic("Unknown opcode")
 		}
 	}
