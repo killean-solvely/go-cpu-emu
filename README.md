@@ -1,6 +1,7 @@
 # Instruction Set
 
 Order follows for each instructions
+```
 OP REG
 OP REG REG
 OP REG ADDR
@@ -9,162 +10,217 @@ OP ADDR
 OP ADDR VAL
 OP VAL
 OP
+```
+
 
 Load a value into a register
-LOAD REG VAL
+
+`LOAD REG VAL`
 
 Load a value from memory into a register
-LOADM REG ADDR
+
+`LOADM REG ADDR`
 
 Store a register into memory
-STORE REG ADDR
+
+`STORE REG ADDR`
 
 Store a value into memory
-STORE ADDR VAL
+
+`STORE ADDR VAL`
 
 Store the right register at the left registers value as the memory address
-STORE REG REG
+
+`STORE REG REG`
 
 Add two registers and store the result in the left register
-ADD REG REG
+
+`ADD REG REG`
 
 Add a value to a register and store the result in the register
-ADD REG VAL
+
+`ADD REG VAL`
 
 Subtract two registers and store the result in the left register
-SUB REG REG
+
+`SUB REG REG`
 
 Subtract a value from a register and store the result in the register
-SUB REG VAL
+
+`SUB REG VAL`
 
 Multiply two registers and store the result in the left register
-MUL REG REG
+
+`MUL REG REG`
 
 Multiply a register by a value and store the result in the register
-MUL REG VAL
+
+`MUL REG VAL`
 
 Divide two registers and store the result in the left register
-DIV REG REG
+
+`DIV REG REG`
 
 Divide a register by a value and store the result in the register
-DIV REG VAL
+
+`DIV REG VAL`
 
 Modulo two registers and store the result in the left register
-MOD REG REG
+
+`MOD REG REG`
 
 Modulo a register by a value and store the result in the register
-MOD REG VAL
+
+`MOD REG VAL`
 
 And two registers and store the result in the left register
-AND REG REG
+
+`AND REG REG`
 
 And a register by a value and store the result in the register
-AND REG VAL
+
+`AND REG VAL`
 
 Or two registers and store the result in the left register
-OR REG REG
+
+`OR REG REG`
 
 Or a register by a value and store the result in the register
-OR REG VAL
+
+`OR REG VAL`
 
 Xor two registers and store the result in the left register
-XOR REG REG
+
+`XOR REG REG`
 
 Xor a register by a value and store the result in the register
-XOR REG VAL
+
+`XOR REG VAL`
 
 Not a register and store the result in the register
-NOT REG
+
+`NOT REG`
 
 Shift a register left one bit and store the result in the register
-SHL REG
+
+`SHL REG`
 
 Shift a register right one bit and store the result in the register
-SHR REG
+
+`SHR REG`
 
 Increment a register by one
-INC REG
+
+`INC REG`
 
 Decrement a register by one
-DEC REG
+
+`DEC REG`
 
 Push a value onto the stack
-PUSH VAL
+
+`PUSH VAL`
 
 Push the value in a register onto the stack
-PUSH REG
+
+`PUSH REG`
 
 Pop a value off the stack (destroys the value)
-POP
+
+`POP`
 
 Pop a value off the stack and store it in a register
-POP REG
+
+`POP REG`
 
 Compares two registers, setting the flags
-CMP REG REG
+
+`CMP REG REG`
 
 Compares a register to a value, setting the flags
-CMP REG VAL
+
+`CMP REG VAL`
 
 Jump to an address
-JMP ADDR
+
+`JMP ADDR`
 
 Jump to a register
-JMP REG
+
+`JMP REG`
 
 Jump to an address if the equal flag is set
-JE ADDR
+
+`JE ADDR`
 
 Jump to a register if the equal flag is set
-JE REG
+
+`JE REG`
 
 Jump to an address if the not equal flag is set
-JNE ADDR
+
+`JNE ADDR`
 
 Jump to a register if the not equal flag is set
-JNE REG
+
+`JNE REG`
 
 Jump to an address if the greater flag is set
-JG ADDR
+
+`JG ADDR`
 
 Jump to a register if the greater flag is set
-JG REG
+
+`JG REG`
 
 Jump to an address if the greater flag and equal flag are set
-JGE ADDR
+
+`JGE ADDR`
 
 Jump to a register if the greater flag and equal flag are set
-JGE REG
+
+`JGE REG`
 
 Jump to an address if the less flag is set
-JL ADDR
+
+`JL ADDR`
 
 Jump to a register if the less flag is set
-JL REG
+
+`JL REG`
 
 Jump to an address if the less flag and equal flag are set
-JLE ADDR
+
+`JLE ADDR`
 
 Jump to a register if the less flag and equal flag are set
-JLE REG
+
+`JLE REG`
 
 Call a function at an address
-CALL ADDR
+
+`CALL ADDR`
 
 Call a function at a register
-CALL REG
+
+`CALL REG`
 
 Return from a function
-RET
+
+`RET`
 
 Print a value
-PRINT VAL
+
+`PRINT VAL`
 
 Print the value in a register
-PRINT REG
+
+`PRINT REG`
 
 Print a string at an address
-PRINTS ADDR
+
+`PRINTS ADDR`
 
 End the program
-HLT
+
+`HLT`
