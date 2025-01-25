@@ -79,7 +79,7 @@ func (a *Assembler) firstPass() {
 
 		opcodeName := parts[0]
 
-		jmpRegisters := []string{"JMP_REG", "JE", "JNE", "JG", "JGE", "JL", "JLE"}
+		jmpRegisters := []string{"JMP_REG", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL"}
 		if slices.Contains(jmpRegisters, opcodeName) {
 			a.JumpAddresses[opcodeCount+1] = parts[1]
 		}

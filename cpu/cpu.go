@@ -82,6 +82,10 @@ func (c *CPU) Execute(memory *Memory) {
 			reg, address := c.prepRAInstruction(memory)
 			memory.WriteStoredMemory(uint16(address), c.Registers[reg])
 
+		case OP_STORE_REG_REG:
+			reg1, reg2 := c.prepRRInstruction(memory)
+			memory.WriteStoredMemory(uint16(c.Registers[reg1]), c.Registers[reg2])
+
 		case OP_LOAD_MEM:
 			reg, address := c.prepRAInstruction(memory)
 			c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
@@ -206,6 +210,15 @@ func (c *CPU) Execute(memory *Memory) {
 				c.ProgramCounter = uint16(address)
 			}
 
+		case OP_CALL:
+			address := c.prepAInstruction(memory)
+			c.Stack.Push(uint8(c.ProgramCounter))
+			c.ProgramCounter = uint16(address)
+
+		case OP_RET:
+			c.prepNoneInstruction()
+			c.ProgramCounter = uint16(c.Stack.Pop())
+
 		case OP_PRINT:
 			value := c.prepVInstruction(memory)
 			fmt.Println(value)
@@ -226,7 +239,7 @@ func (c *CPU) Execute(memory *Memory) {
 				str = append(str, value)
 				address++
 			}
-			fmt.Println(string(str))
+			fmt.Print(string(str))
 
 		case OP_HLT:
 			return

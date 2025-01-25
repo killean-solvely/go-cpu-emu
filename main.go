@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -35,7 +34,6 @@ func main() {
 
 	bytecode, err := asm.Assemble()
 	if err != nil {
-		fmt.Println(err.Error())
 		return
 	}
 
