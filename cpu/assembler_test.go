@@ -2,7 +2,7 @@ package cpu
 
 import "testing"
 
-func TestAssemblerLabels(t *testing.T) {
+func TestAssembler(t *testing.T) {
 	program := []string{
 		"LOAD R1 1",
 		"prelabel:",
