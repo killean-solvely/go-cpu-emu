@@ -4,6 +4,7 @@ type Opcode uint8
 
 const (
 	OP_LOAD_RV  Opcode = iota // Load a value into a register
+	OP_LOAD_RR                // Load a register into another register
 	OP_LOADM_RA               // Load a value from stored memory into a register
 	OP_STORE_RA               // Stores a register in stored memory
 	OP_STORE_AV               // Stores a value in stored memory
@@ -49,9 +50,9 @@ const (
 	OP_JL_R                   // Jump if less than an register
 	OP_JLE_A                  // Jump if less than or equal to an address
 	OP_JLE_R                  // Jump if less than or equal to an register
-	OP_CALL_A                 // Call a function at an address
-	OP_CALL_R                 // Call a function at a register
-	OP_RET_NONE               // Return from a function
+	OP_CALL_A                 // Call a function at an address, pushing the next instruction onto the stack
+	OP_CALL_R                 // Call a function at a register, pushing the next instruction onto the stack
+	OP_RET_NONE               // Return from a function, popping the return address off the stack and jumping to it
 	OP_PRINT_V                // Print a value
 	OP_PRINT_R                // Print a register
 	OP_PRINTS_A               // Print a string from stored memory
@@ -82,6 +83,7 @@ type OpcodeKey struct {
 
 var OpcodeMap = map[OpcodeKey]Opcode{
 	{"LOAD", INST_RV}:  OP_LOAD_RV,
+	{"LOAD", INST_RR}:  OP_LOAD_RR,
 	{"LOADM", INST_RA}: OP_LOADM_RA,
 	{"STORE", INST_RA}: OP_STORE_RA,
 	{"STORE", INST_AV}: OP_STORE_AV,

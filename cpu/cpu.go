@@ -74,6 +74,10 @@ func (c *CPU) Execute(memory *Memory) {
 			reg, value := c.prepRVInstruction(memory)
 			c.Registers[reg] = value
 
+		case OP_LOAD_RR:
+			reg1, reg2 := c.prepRRInstruction(memory)
+			c.Registers[reg1] = c.Registers[reg2]
+
 		case OP_LOADM_RA:
 			reg, address := c.prepRAInstruction(memory)
 			c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
@@ -175,8 +179,8 @@ func (c *CPU) Execute(memory *Memory) {
 			c.Registers[reg]--
 
 		case OP_PUSH_R:
-			value := c.prepVInstruction(memory)
-			c.Stack.Push(value)
+			reg := c.prepRInstruction(memory)
+			c.Stack.Push(c.Registers[reg])
 
 		case OP_PUSH_V:
 			value := c.prepVInstruction(memory)

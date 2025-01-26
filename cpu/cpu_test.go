@@ -44,3 +44,49 @@ func TestCPUExecution(t *testing.T) {
 		t.Errorf("Expected register 1 to be 10, got %d", cpu.Registers[1])
 	}
 }
+
+func TestPop(t *testing.T) {
+	asm := NewAssembler([]string{
+		"LOAD R0 1",
+		"LOAD R1 2",
+		"LOAD R2 3",
+		"LOAD R3 4",
+
+		"PUSH R0",
+		"PUSH R1",
+		"PUSH R2",
+		"PUSH R3",
+
+		"POP R3",
+		"POP R2",
+		"POP R1",
+		"POP R0",
+
+		"HLT",
+	})
+	bytecode, err := asm.Assemble()
+	if err != nil {
+		t.Fatalf("Failed to assemble code: %v", err)
+	}
+
+	cpu := NewCPU()
+	mem := NewMemory()
+	mem.LoadCode(bytecode)
+	cpu.Execute(mem)
+
+	if cpu.Registers[0] != 1 {
+		t.Errorf("Expected register 0 to be 1, got %d", cpu.Registers[0])
+	}
+
+	if cpu.Registers[1] != 2 {
+		t.Errorf("Expected register 1 to be 2, got %d", cpu.Registers[1])
+	}
+
+	if cpu.Registers[2] != 3 {
+		t.Errorf("Expected register 2 to be 3, got %d", cpu.Registers[2])
+	}
+
+	if cpu.Registers[3] != 4 {
+		t.Errorf("Expected register 3 to be 4, got %d", cpu.Registers[3])
+	}
+}

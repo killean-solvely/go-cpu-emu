@@ -1,6 +1,7 @@
 # Instruction Set
 
 Order follows for each instructions
+
 ```
 OP REG
 OP REG REG
@@ -12,10 +13,13 @@ OP VAL
 OP
 ```
 
-
 Load a value into a register
 
 `LOAD REG VAL`
+
+Load a register into another register
+
+`LOAD REG REG`
 
 Load a value from memory into a register
 
