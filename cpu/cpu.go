@@ -83,8 +83,8 @@ func (c *CPU) Execute(memory *Memory) {
 			c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
 
 		case OP_STORE_RA:
-			reg, value := c.prepRAInstruction(memory)
-			memory.WriteStoredMemory(uint16(c.Registers[reg]), value)
+			reg, address := c.prepRAInstruction(memory)
+			memory.WriteStoredMemory(uint16(address), c.Registers[reg])
 
 		case OP_STORE_AV:
 			address, value := c.prepAVInstruction(memory)
