@@ -80,7 +80,8 @@ func (a *Assembler) firstPass() {
 		opcodeName := parts[0]
 
 		jmpRegisters := []string{"JMP", "JE", "JNE", "JG", "JL", "JGE", "JLE", "CALL"}
-		if slices.Contains(jmpRegisters, opcodeName) {
+		if slices.Contains(jmpRegisters, opcodeName) && !validRegister(parts[1]) &&
+			!isANumber(parts[1]) {
 			a.JumpAddresses[opcodeCount+1] = parts[1]
 		}
 
@@ -453,26 +454,26 @@ func validAddress(address int) bool {
 	return address >= 0 && address < TotalMemorySize
 }
 
+func isANumber(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
 func getInstructionType(parts []string) InstructionType {
 	if len(parts) == 1 {
 		return INST_NONE
 	}
 
 	if len(parts) == 2 {
-		if parts[1][0] == 'R' {
-			lInstructions := []string{"CALL", "JE", "JNE", "JG", "JL", "JGE", "JLE", "JMP"}
-			if slices.Contains(lInstructions, parts[0]) {
-				return INST_RL
-			} else {
-				return INST_R
-			}
+		if validRegister(parts[1]) {
+			return INST_R
 		} else {
 			vInstructions := []string{"PRINT", "PUSH"}
 			if slices.Contains(vInstructions, parts[0]) {
 				return INST_V
 			} else {
 				lInstructions := []string{"CALL", "JE", "JNE", "JG", "JL", "JGE", "JLE", "JMP"}
-				if slices.Contains(lInstructions, parts[0]) {
+				if slices.Contains(lInstructions, parts[0]) && !isANumber(parts[1]) {
 					return INST_AL
 				} else {
 					return INST_A
