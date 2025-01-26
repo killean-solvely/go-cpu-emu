@@ -468,7 +468,7 @@ func getInstructionType(parts []string) InstructionType {
 			}
 		} else {
 			vInstructions := []string{"PRINT", "PUSH"}
-			if slices.Contains(vInstructions, parts[1]) {
+			if slices.Contains(vInstructions, parts[0]) {
 				return INST_V
 			} else {
 				lInstructions := []string{"CALL", "JE", "JNE", "JG", "JL", "JGE", "JLE", "JMP"}
