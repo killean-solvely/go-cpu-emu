@@ -22,19 +22,21 @@ func TestCPUExecution(t *testing.T) {
 	cpu := NewCPU()
 	mem := NewMemory()
 
-	mem.Write(CodeMemoryStart+0, uint8(OP_LOAD_RV))
-	mem.Write(CodeMemoryStart+1, 0)
-	mem.Write(CodeMemoryStart+2, 42)
+	mem.WriteByte(CodeMemoryStart+0, uint8(OP_LOAD_RV))
+	mem.WriteByte(CodeMemoryStart+1, 0)
+	mem.WriteByte(CodeMemoryStart+2, 0)
+	mem.WriteByte(CodeMemoryStart+3, 42)
 
-	mem.Write(CodeMemoryStart+3, uint8(OP_LOAD_RV))
-	mem.Write(CodeMemoryStart+4, 1)
-	mem.Write(CodeMemoryStart+5, 10)
+	mem.WriteByte(CodeMemoryStart+4, uint8(OP_LOAD_RV))
+	mem.WriteByte(CodeMemoryStart+5, 1)
+	mem.WriteByte(CodeMemoryStart+6, 0)
+	mem.WriteByte(CodeMemoryStart+7, 10)
 
-	mem.Write(CodeMemoryStart+6, uint8(OP_ADD_RR))
-	mem.Write(CodeMemoryStart+7, 0)
-	mem.Write(CodeMemoryStart+8, 1)
+	mem.WriteByte(CodeMemoryStart+8, uint8(OP_ADD_RR))
+	mem.WriteByte(CodeMemoryStart+9, 0)
+	mem.WriteByte(CodeMemoryStart+10, 1)
 
-	mem.Write(CodeMemoryStart+9, uint8(OP_HLT_NONE))
+	mem.WriteByte(CodeMemoryStart+11, uint8(OP_HLT_NONE))
 
 	cpu.Execute(mem)
 
@@ -91,8 +93,7 @@ func TestLoadMRA(t *testing.T) {
 		t.Fatalf("Error preparing CPU and memory: %s", err)
 	}
 
-	mem.Write(0, 42)
-
+	mem.WriteWord(0, 42)
 	cpu.Execute(mem)
 
 	if cpu.Registers[0] != 42 {
@@ -112,8 +113,8 @@ func TestStoreRA(t *testing.T) {
 
 	cpu.Execute(mem)
 
-	if mem.Read(0) != 42 {
-		t.Errorf("Expected memory address 0 to be 42, got %d", mem.Read(0))
+	if mem.ReadWord(0) != 42 {
+		t.Errorf("Expected memory address 0 to be 42, got %d", mem.ReadByte(0))
 	}
 }
 
@@ -128,8 +129,8 @@ func TestStoreAV(t *testing.T) {
 
 	cpu.Execute(mem)
 
-	if mem.Read(0) != 42 {
-		t.Errorf("Expected memory address 0 to be 42, got %d", mem.Read(0))
+	if mem.ReadWord(0) != 42 {
+		t.Errorf("Expected memory address 0 to be 42, got %d", mem.ReadByte(0))
 	}
 }
 
@@ -146,8 +147,8 @@ func TestStoreRR(t *testing.T) {
 
 	cpu.Execute(mem)
 
-	if mem.Read(0) != 42 {
-		t.Errorf("Expected memory address 0 to be 42, got %d", mem.Read(0))
+	if mem.ReadWord(0) != 42 {
+		t.Errorf("Expected memory address 0 to be 42, got %d", mem.ReadByte(0))
 	}
 }
 
@@ -443,8 +444,8 @@ func TestNotR(t *testing.T) {
 
 	cpu.Execute(mem)
 
-	if cpu.Registers[0] != 85 {
-		t.Errorf("Expected register 0 to be 85, got %d", cpu.Registers[0])
+	if cpu.Registers[0] != 65365 {
+		t.Errorf("Expected register 0 to be 65365, got %d", cpu.Registers[0])
 	}
 }
 
@@ -460,8 +461,8 @@ func TestShlR(t *testing.T) {
 
 	cpu.Execute(mem)
 
-	if cpu.Registers[0] != 84 {
-		t.Errorf("Expected register 0 to be 84, got %d", cpu.Registers[0])
+	if cpu.Registers[0] != 340 {
+		t.Errorf("Expected register 0 to be 340, got %d", cpu.Registers[0])
 	}
 }
 
@@ -1161,7 +1162,7 @@ func TestCallA(t *testing.T) {
 		t.Errorf("Expected stack to have 1 item, got %d", len(cpu.Stack.Data))
 	}
 
-	if cpu.Stack.Pop() != CodeMemoryStart+2 {
+	if cpu.Stack.Pop() != CodeMemoryStart+3 {
 		t.Errorf("Expected return address to be pushed to stack")
 	}
 }
@@ -1187,14 +1188,14 @@ func TestCallR(t *testing.T) {
 		t.Errorf("Expected stack to have 1 item, got %d", len(cpu.Stack.Data))
 	}
 
-	if cpu.Stack.Pop() != CodeMemoryStart+5 {
+	if cpu.Stack.Pop() != CodeMemoryStart+6 {
 		t.Errorf("Expected return address to be pushed to stack")
 	}
 }
 
 func TestRet(t *testing.T) {
 	cpu, mem, err := prepCpuAndMem([]string{
-		"CALL 57",
+		"CALL 2051",
 		"RET",
 	})
 	if err != nil {
@@ -1205,7 +1206,7 @@ func TestRet(t *testing.T) {
 	cpu.executeNext(mem)
 	cpu.executeNext(mem)
 
-	if cpu.ProgramCounter != CodeMemoryStart+2 {
-		t.Errorf("Expected program counter to be 2, got %d", cpu.ProgramCounter)
+	if cpu.ProgramCounter != CodeMemoryStart+3 {
+		t.Errorf("Expected program counter to be %d, got %d", CodeMemoryStart+3, cpu.ProgramCounter)
 	}
 }

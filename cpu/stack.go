@@ -3,23 +3,23 @@ package cpu
 const StackSize = 256
 
 type Stack struct {
-	Data []uint8
+	Data []uint16
 }
 
 func NewStack() *Stack {
 	return &Stack{
-		Data: []uint8{},
+		Data: []uint16{},
 	}
 }
 
-func (s *Stack) Push(value uint8) {
+func (s *Stack) Push(value uint16) {
 	s.Data = append(s.Data, value)
 	if len(s.Data) >= StackSize {
 		panic("Stack overflow")
 	}
 }
 
-func (s *Stack) Pop() uint8 {
+func (s *Stack) Pop() uint16 {
 	if len(s.Data) == 0 {
 		panic("Stack underflow")
 	}

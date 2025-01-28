@@ -1,8 +1,8 @@
 package cpu
 
 const (
-	StoredMemorySize = 55
-	TotalMemorySize  = 256
+	StoredMemorySize = 2048 // 2kb
+	TotalMemorySize  = 65536
 	CodeMemoryStart  = StoredMemorySize
 )
 
@@ -14,32 +14,64 @@ func NewMemory() *Memory {
 	return &Memory{}
 }
 
-func (m *Memory) Read(address uint16) uint8 {
+func (m *Memory) ReadByte(address uint32) uint8 {
 	if address >= TotalMemorySize {
 		panic("Memory read out of bounds")
 	}
 	return m.Data[address]
 }
 
-func (m *Memory) Write(address uint16, value uint8) {
+func (m *Memory) ReadWord(address uint32) uint16 {
+	if address >= TotalMemorySize {
+		panic("Memory read out of bounds")
+	}
+	return bytesToUint16(m.Data[address : address+2])
+}
+
+func (m *Memory) WriteByte(address uint32, value uint8) {
 	if address >= TotalMemorySize {
 		panic("Memory write out of bounds")
 	}
 	m.Data[address] = value
 }
 
-func (m *Memory) ReadStoredMemory(address uint16) uint8 {
+func (m *Memory) WriteWord(address uint32, value uint16) {
+	if address >= TotalMemorySize {
+		panic("Memory write out of bounds")
+	}
+	bytes := uint16ToBytes(value)
+	m.Data[address] = bytes[0]
+	m.Data[address+1] = bytes[1]
+}
+
+func (m *Memory) ReadStoredMemoryByte(address uint32) uint8 {
 	if address >= StoredMemorySize {
 		panic("Stored memory read out of bounds")
 	}
 	return m.Data[address]
 }
 
-func (m *Memory) WriteStoredMemory(address uint16, value uint8) {
+func (m *Memory) ReadStoredMemoryWord(address uint32) uint16 {
+	if address >= StoredMemorySize {
+		panic("Stored memory read out of bounds")
+	}
+	return bytesToUint16(m.Data[address : address+2])
+}
+
+func (m *Memory) WriteStoredMemoryByte(address uint32, value uint8) {
 	if address >= StoredMemorySize {
 		panic("Stored memory write out of bounds")
 	}
 	m.Data[address] = value
+}
+
+func (m *Memory) WriteStoredMemoryWord(address uint32, value uint16) {
+	if address >= StoredMemorySize {
+		panic("Stored memory write out of bounds")
+	}
+	bytes := uint16ToBytes(value)
+	m.Data[address] = bytes[0]
+	m.Data[address+1] = bytes[1]
 }
 
 func (m *Memory) LoadCode(code []uint8) {
@@ -47,6 +79,6 @@ func (m *Memory) LoadCode(code []uint8) {
 		panic("Code exceeds available memory space")
 	}
 	for i, b := range code {
-		m.Write(uint16(CodeMemoryStart+i), b)
+		m.WriteByte(uint32(CodeMemoryStart+i), b)
 	}
 }

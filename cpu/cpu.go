@@ -25,7 +25,7 @@ type Flags struct {
 	Less    uint8
 }
 
-func (f *Flags) Compare(a, b uint8) {
+func (f *Flags) Compare(a, b uint16) {
 	if a == b {
 		f.Equal = 1
 	} else {
@@ -46,15 +46,15 @@ func (f *Flags) Compare(a, b uint8) {
 }
 
 type CPU struct {
-	Registers      [RegisterCount]uint8
+	Registers      [RegisterCount]uint16
 	Stack          *Stack
 	Flags          Flags
-	ProgramCounter uint16
+	ProgramCounter uint32
 }
 
 func NewCPU() *CPU {
 	cpu := &CPU{
-		Registers:      [RegisterCount]uint8{},
+		Registers:      [RegisterCount]uint16{},
 		Stack:          NewStack(),
 		ProgramCounter: 0,
 	}
@@ -76,7 +76,7 @@ func (c *CPU) Execute(memory *Memory) {
 func (c *CPU) executeNext(memory *Memory) (halted bool) {
 	halted = false
 
-	opcode := memory.Read(c.ProgramCounter)
+	opcode := memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
 
 	switch Opcode(opcode) {
@@ -90,19 +90,19 @@ func (c *CPU) executeNext(memory *Memory) (halted bool) {
 
 	case OP_LOADM_RA:
 		reg, address := c.prepRAInstruction(memory)
-		c.Registers[reg] = memory.ReadStoredMemory(uint16(address))
+		c.Registers[reg] = memory.ReadStoredMemoryWord(uint32(address))
 
 	case OP_STORE_RA:
 		reg, address := c.prepRAInstruction(memory)
-		memory.WriteStoredMemory(uint16(address), c.Registers[reg])
+		memory.WriteStoredMemoryWord(uint32(address), c.Registers[reg])
 
 	case OP_STORE_AV:
 		address, value := c.prepAVInstruction(memory)
-		memory.WriteStoredMemory(uint16(address), value)
+		memory.WriteStoredMemoryWord(uint32(address), value)
 
 	case OP_STORE_RR:
 		reg1, reg2 := c.prepRRInstruction(memory)
-		memory.WriteStoredMemory(uint16(c.Registers[reg1]), c.Registers[reg2])
+		memory.WriteStoredMemoryWord(uint32(c.Registers[reg1]), c.Registers[reg2])
 
 	case OP_ADD_RR:
 		reg1, reg2 := c.prepRRInstruction(memory)
@@ -214,97 +214,97 @@ func (c *CPU) executeNext(memory *Memory) (halted bool) {
 
 	case OP_JMP_A:
 		address := c.prepAInstruction(memory)
-		c.ProgramCounter = uint16(address)
+		c.ProgramCounter = uint32(address)
 
 	case OP_JMP_R:
 		reg := c.prepRInstruction(memory)
-		c.ProgramCounter = uint16(c.Registers[reg])
+		c.ProgramCounter = uint32(c.Registers[reg])
 
 	case OP_JE_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JE_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_JNE_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Equal == 0 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JNE_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Equal == 0 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_JG_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Greater == 1 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JG_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Greater == 1 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_JGE_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Greater == 1 || c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JGE_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Greater == 1 || c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_JL_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Less == 1 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JL_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Less == 1 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_JLE_A:
 		address := c.prepAInstruction(memory)
 		if c.Flags.Less == 1 || c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(address)
+			c.ProgramCounter = uint32(address)
 		}
 
 	case OP_JLE_R:
 		reg := c.prepRInstruction(memory)
 		if c.Flags.Less == 1 || c.Flags.Equal == 1 {
-			c.ProgramCounter = uint16(c.Registers[reg])
+			c.ProgramCounter = uint32(c.Registers[reg])
 		}
 
 	case OP_CALL_A:
 		address := c.prepAInstruction(memory)
-		c.Stack.Push(uint8(c.ProgramCounter))
-		c.ProgramCounter = uint16(address)
+		c.Stack.Push(uint16(c.ProgramCounter))
+		c.ProgramCounter = uint32(address)
 
 	case OP_CALL_R:
 		reg := c.prepRInstruction(memory)
-		c.Stack.Push(uint8(c.ProgramCounter))
-		c.ProgramCounter = uint16(c.Registers[reg])
+		c.Stack.Push(uint16(c.ProgramCounter))
+		c.ProgramCounter = uint32(c.Registers[reg])
 
 	case OP_RET_NONE:
 		c.prepNoneInstruction()
-		c.ProgramCounter = uint16(c.Stack.Pop())
+		c.ProgramCounter = uint32(c.Stack.Pop())
 
 	case OP_PRINT_V:
 		value := c.prepVInstruction(memory)
@@ -319,7 +319,7 @@ func (c *CPU) executeNext(memory *Memory) (halted bool) {
 		// Build the string up from memory. The string is null-terminated.
 		var str []byte
 		for {
-			value := memory.ReadStoredMemory(uint16(address))
+			value := memory.ReadStoredMemoryByte(uint32(address))
 			if value == 0 {
 				break
 			}
@@ -339,55 +339,55 @@ func (c *CPU) executeNext(memory *Memory) (halted bool) {
 }
 
 func (c *CPU) prepRRInstruction(memory *Memory) (reg1, reg2 uint8) {
-	reg1 = memory.Read(c.ProgramCounter)
+	reg1 = memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
-	reg2 = memory.Read(c.ProgramCounter)
+	reg2 = memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
 	return reg1, reg2
 }
 
-func (c *CPU) prepRVInstruction(memory *Memory) (reg uint8, value uint8) {
-	reg = memory.Read(c.ProgramCounter)
+func (c *CPU) prepRVInstruction(memory *Memory) (reg uint8, value uint16) {
+	reg = memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
-	value = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
+	value = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
 	return reg, value
 }
 
-func (c *CPU) prepRAInstruction(memory *Memory) (reg, address uint8) {
-	reg = memory.Read(c.ProgramCounter)
+func (c *CPU) prepRAInstruction(memory *Memory) (reg uint8, address uint16) {
+	reg = memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
-	address = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
+	address = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
 	return reg, address
 }
 
 func (c *CPU) prepRInstruction(memory *Memory) (reg uint8) {
-	reg = memory.Read(c.ProgramCounter)
+	reg = memory.ReadByte(c.ProgramCounter)
 	c.ProgramCounter++
 	return reg
 }
 
-func (c *CPU) prepAVInstruction(memory *Memory) (address, value uint8) {
-	address = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
-	value = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
+func (c *CPU) prepAVInstruction(memory *Memory) (address, value uint16) {
+	address = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
+	value = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
 	return address, value
 }
 
-func (c *CPU) prepAInstruction(memory *Memory) (address uint8) {
-	address = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
+func (c *CPU) prepAInstruction(memory *Memory) (address uint16) {
+	address = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
 	return address
 }
 
-func (c *CPU) prepVInstruction(memory *Memory) (value uint8) {
-	value = memory.Read(c.ProgramCounter)
-	c.ProgramCounter++
+func (c *CPU) prepVInstruction(memory *Memory) (value uint16) {
+	value = memory.ReadWord(c.ProgramCounter)
+	c.ProgramCounter += 2
 	return value
 }
 
 func (c *CPU) prepNoneInstruction() {
-	// c.ProgramCounter++
+	// Do nothing (currently)
 }

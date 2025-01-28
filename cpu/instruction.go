@@ -148,14 +148,14 @@ var OpcodeMap = map[OpcodeKey]Opcode{
 
 var InstructionSizeMap = map[InstructionType]int{
 	INST_RR:   3,
-	INST_RV:   3,
-	INST_RA:   3,
-	INST_AV:   3,
-	INST_A:    2,
-	INST_V:    2,
+	INST_RV:   4,
+	INST_RA:   4,
+	INST_AV:   5,
+	INST_A:    3,
+	INST_V:    3,
 	INST_R:    2,
 	INST_NONE: 1,
 
-	INST_AL: 2,
+	INST_AL: 3,
 	INST_RL: 2,
 }

@@ -140,7 +140,9 @@ func (a Assembler) secondPass() ([]uint8, error) {
 			return nil, NewAssemblerError(INVALID_LABEL, 0, 0, labelName, "Invalid label")
 		}
 
-		bytecode[jumpAddress] = uint8(labelAddress)
+		labelAddressBytes := uint16ToBytes(uint16(labelAddress))
+		bytecode[jumpAddress] = labelAddressBytes[0]
+		bytecode[jumpAddress+1] = labelAddressBytes[1]
 	}
 
 	return bytecode, nil
@@ -209,7 +211,8 @@ func (a *Assembler) parseRV(
 			return nil, NewAssemblerError(INVALID_VALUE, line, opcode, opcodeName, "Invalid value")
 		}
 	}
-	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(value)}, nil
+	valueBytes := uint16ToBytes(uint16(value))
+	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), valueBytes[0], valueBytes[1]}, nil
 }
 
 func (a *Assembler) parseRA(
@@ -240,7 +243,14 @@ func (a *Assembler) parseRA(
 	if err != nil || !validAddress(address) {
 		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
 	}
-	return []uint8{uint8(opcode), uint8(RegisterMap[parts[1]]), uint8(address)}, nil
+
+	addressBytes := uint16ToBytes(uint16(address))
+	return []uint8{
+		uint8(opcode),
+		uint8(RegisterMap[parts[1]]),
+		addressBytes[0],
+		addressBytes[1],
+	}, nil
 }
 
 func (a *Assembler) parseRL(
@@ -307,7 +317,16 @@ func (a *Assembler) parseAV(
 		}
 	}
 
-	return []uint8{uint8(opcode), uint8(address), uint8(value)}, nil
+	addressBytes := uint16ToBytes(uint16(address))
+	valueBytes := uint16ToBytes(uint16(value))
+
+	return []uint8{
+		uint8(opcode),
+		addressBytes[0],
+		addressBytes[1],
+		valueBytes[0],
+		valueBytes[1],
+	}, nil
 }
 
 func (a *Assembler) parseAL(
@@ -337,7 +356,10 @@ func (a *Assembler) parseAL(
 				"Invalid label",
 			)
 	}
-	return []uint8{uint8(opcode), uint8(a.LabelAddresses[parts[1]])}, nil
+
+	addressBytes := uint16ToBytes(uint16(a.LabelAddresses[parts[1]]))
+
+	return []uint8{uint8(opcode), addressBytes[0], addressBytes[1]}, nil
 }
 
 func (a *Assembler) parseA(
@@ -359,7 +381,10 @@ func (a *Assembler) parseA(
 	if err != nil || !validAddress(address) {
 		return nil, NewAssemblerError(INVALID_ADDRESS, line, opcode, opcodeName, "Invalid address")
 	}
-	return []uint8{uint8(opcode), uint8(address)}, nil
+
+	addressBytes := uint16ToBytes(uint16(address))
+
+	return []uint8{uint8(opcode), addressBytes[0], addressBytes[1]}, nil
 }
 
 func (a *Assembler) parseV(
@@ -391,7 +416,9 @@ func (a *Assembler) parseV(
 		}
 	}
 
-	return []uint8{uint8(opcode), uint8(value)}, nil
+	valueBytes := uint16ToBytes(uint16(value))
+
+	return []uint8{uint8(opcode), valueBytes[0], valueBytes[1]}, nil
 }
 
 func (a *Assembler) parseR(
